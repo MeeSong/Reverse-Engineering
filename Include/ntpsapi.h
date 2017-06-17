@@ -107,6 +107,107 @@ typedef struct _WOW64_PROCESS
 //////////////////////////////////////////////////////////////////////////
 
 //
+// NtQueryInformationProcess
+//
+
+typedef enum _PROCESSINFOCLASS : UINT32
+{
+    ProcessBasicInformation, // q: PROCESS_BASIC_INFORMATION, PROCESS_EXTENDED_BASIC_INFORMATION
+    ProcessQuotaLimits, // qs: QUOTA_LIMITS, QUOTA_LIMITS_EX
+    ProcessIoCounters, // q: IO_COUNTERS
+    ProcessVmCounters, // q: VM_COUNTERS, VM_COUNTERS_EX, VM_COUNTERS_EX2
+    ProcessTimes, // q: KERNEL_USER_TIMES
+    ProcessBasePriority, // s: KPRIORITY
+    ProcessRaisePriority, // s: ULONG
+    ProcessDebugPort, // q: HANDLE
+    ProcessExceptionPort, // s: HANDLE
+    ProcessAccessToken, // s: PROCESS_ACCESS_TOKEN
+    ProcessLdtInformation, // qs: PROCESS_LDT_INFORMATION // 10
+    ProcessLdtSize, // s: PROCESS_LDT_SIZE
+    ProcessDefaultHardErrorMode, // qs: ULONG
+    ProcessIoPortHandlers, // (kernel-mode only)
+    ProcessPooledUsageAndLimits, // q: POOLED_USAGE_AND_LIMITS
+    ProcessWorkingSetWatch, // q: PROCESS_WS_WATCH_INFORMATION[]; s: void
+    ProcessUserModeIOPL,
+    ProcessEnableAlignmentFaultFixup, // s: BOOLEAN
+    ProcessPriorityClass, // qs: PROCESS_PRIORITY_CLASS
+    ProcessWx86Information,
+    ProcessHandleCount, // q: ULONG, PROCESS_HANDLE_INFORMATION // 20
+    ProcessAffinityMask, // s: KAFFINITY
+    ProcessPriorityBoost, // qs: ULONG
+    ProcessDeviceMap, // qs: PROCESS_DEVICEMAP_INFORMATION, PROCESS_DEVICEMAP_INFORMATION_EX
+    ProcessSessionInformation, // q: PROCESS_SESSION_INFORMATION
+    ProcessForegroundInformation, // s: PROCESS_FOREGROUND_BACKGROUND
+    ProcessWow64Information, // q: ULONG_PTR
+    ProcessImageFileName, // q: UNICODE_STRING
+    ProcessLUIDDeviceMapsEnabled, // q: ULONG
+    ProcessBreakOnTermination, // qs: ULONG
+    ProcessDebugObjectHandle, // q: HANDLE // 30
+    ProcessDebugFlags, // qs: ULONG
+    ProcessHandleTracing, // q: PROCESS_HANDLE_TRACING_QUERY; s: size 0 disables, otherwise enables
+    ProcessIoPriority, // qs: IO_PRIORITY_HINT
+    ProcessExecuteFlags, // qs: ULONG
+    ProcessResourceManagement,
+    ProcessCookie, // q: ULONG
+    ProcessImageInformation, // q: SECTION_IMAGE_INFORMATION
+    ProcessCycleTime, // q: PROCESS_CYCLE_TIME_INFORMATION // since VISTA
+    ProcessPagePriority, // q: ULONG
+    ProcessInstrumentationCallback, // 40
+    ProcessThreadStackAllocation, // s: PROCESS_STACK_ALLOCATION_INFORMATION, PROCESS_STACK_ALLOCATION_INFORMATION_EX
+    ProcessWorkingSetWatchEx, // q: PROCESS_WS_WATCH_INFORMATION_EX[]
+    ProcessImageFileNameWin32, // q: UNICODE_STRING
+    ProcessImageFileMapping, // q: HANDLE (input)
+    ProcessAffinityUpdateMode, // qs: PROCESS_AFFINITY_UPDATE_MODE
+    ProcessMemoryAllocationMode, // qs: PROCESS_MEMORY_ALLOCATION_MODE
+    ProcessGroupInformation, // q: USHORT[]
+    ProcessTokenVirtualizationEnabled, // s: ULONG
+    ProcessConsoleHostProcess, // q: ULONG_PTR
+    ProcessWindowInformation, // q: PROCESS_WINDOW_INFORMATION // 50
+    ProcessHandleInformation, // q: PROCESS_HANDLE_SNAPSHOT_INFORMATION // since WIN8
+    ProcessMitigationPolicy, // s: PROCESS_MITIGATION_POLICY_INFORMATION
+    ProcessDynamicFunctionTableInformation,
+    ProcessHandleCheckingMode,
+    ProcessKeepAliveCount, // q: PROCESS_KEEPALIVE_COUNT_INFORMATION
+    ProcessRevokeFileHandles, // s: PROCESS_REVOKE_FILE_HANDLES_INFORMATION
+    ProcessWorkingSetControl, // s: PROCESS_WORKING_SET_CONTROL
+    ProcessHandleTable, // since WINBLUE
+    ProcessCheckStackExtentsMode,
+    ProcessCommandLineInformation, // q: UNICODE_STRING // 60
+    ProcessProtectionInformation, // q: PS_PROTECTION
+    ProcessMemoryExhaustion, // PROCESS_MEMORY_EXHAUSTION_INFO // since THRESHOLD
+    ProcessFaultInformation, // PROCESS_FAULT_INFORMATION
+    ProcessTelemetryIdInformation, // PROCESS_TELEMETRY_ID_INFORMATION
+    ProcessCommitReleaseInformation, // PROCESS_COMMIT_RELEASE_INFORMATION
+    ProcessDefaultCpuSetsInformation,
+    ProcessAllowedCpuSetsInformation,
+    ProcessSubsystemProcess,
+    ProcessJobMemoryInformation, // PROCESS_JOB_MEMORY_INFO
+    ProcessInPrivate, // since THRESHOLD2 // 70
+    ProcessRaiseUMExceptionOnInvalidHandleClose,
+    ProcessIumChallengeResponse,
+    ProcessChildProcessInformation, // PROCESS_CHILD_PROCESS_INFORMATION
+    ProcessHighGraphicsPriorityInformation,
+    ProcessSubsystemInformation, // q: SUBSYSTEM_INFORMATION_TYPE // since REDSTONE2
+    ProcessEnergyValues, // PROCESS_ENERGY_VALUES, PROCESS_EXTENDED_ENERGY_VALUES
+    ProcessActivityThrottleState, // PROCESS_ACTIVITY_THROTTLE_STATE
+    ProcessActivityThrottlePolicy, // PROCESS_ACTIVITY_THROTTLE_POLICY
+    ProcessWin32kSyscallFilterInformation,
+    ProcessDisableSystemAllowedCpuSets,
+    ProcessWakeInformation, // PROCESS_WAKE_INFORMATION
+    ProcessEnergyTrackingState, // PROCESS_ENERGY_TRACKING_STATE
+    MaxProcessInfoClass
+} PROCESSINFOCLASS;
+
+extern"C" NTSTATUS NtQueryInformationProcess(
+    HANDLE ProcessHandle,
+    PROCESSINFOCLASS ProcessInformationClass,
+    void* ProcessInformation,
+    UINT32 ProcessInformationLength,
+    UINT32* ReturnLength);
+
+//////////////////////////////////////////////////////////////////////////
+
+//
 // CreateProcess dwCreationFlag values
 //
 
@@ -137,7 +238,7 @@ enum PROCESS_CREATION_FLAGS : UINT32
     CREATE_PROTECTED_PROCESS = 0x00040000,
     EXTENDED_STARTUPINFO_PRESENT = 0x00080000,
 
-    PROCESS_MODE_BACKGROUND_BEGIN = 0x00100000,
+    PROCESS_MODE_BACKGROUND_BEG= 0x00100000,
     PROCESS_MODE_BACKGROUND_END = 0x00200000,
 
     CREATE_BREAKAWAY_FROM_JOB = 0x01000000,
@@ -182,33 +283,52 @@ enum STARTUP_INFO_FLAGS : UINT32
 // Struct and flag for CreateProcessInternal
 //
 
+typedef struct _SECURITY_CAPABILITIES {
+    PISID AppContainerSid;
+    PSID_AND_ATTRIBUTES Capabilities;
+    UINT32 CapabilityCount;
+    UINT32 Reserved;
+} SECURITY_CAPABILITIES, *PSECURITY_CAPABILITIES, *LPSECURITY_CAPABILITIES;
+
+typedef struct _UMS_CREATE_THREAD_ATTRIBUTES {
+    UINT32 UmsVersion;
+    void* UmsContext;
+    void* UmsCompletionList;
+} UMS_CREATE_THREAD_ATTRIBUTES, *PUMS_CREATE_THREAD_ATTRIBUTES;
+
+
+#define PROTECTION_LEVEL_SAME   (UINT32(0xFFFFFFFF))
+
+
 enum PROC_THREAD_ATTRIBUTE_NUM : UINT32
 {
-    ProcThreadAttributeParentProcess = 0,
+    ProcThreadAttributeParentProcess = 0, // in PHANDLE
     ProcThreadAttributeExtendedFlags = 1,
     ProcThreadAttributeHandleList = 2,
-    ProcThreadAttributeGroupAffinity = 3,
-    ProcThreadAttributePreferredNode = 4,
-    ProcThreadAttributeIdealProcessor = 5,
-    ProcThreadAttributeUmsThread = 6,
+    ProcThreadAttributeGroupAffinity = 3, // in PGROUP_AFFINITY
+    ProcThreadAttributePreferredNode = 4, // in INT16*
+    ProcThreadAttributeIdealProcessor = 5, 
+    ProcThreadAttributeUmsThread = 6, // in PUMS_CREATE_THREAD_ATTRIBUTES
     ProcThreadAttributeMitigationPolicy = 7,
     ProcThreadAttributePackageFullName = 8,
     ProcThreadAttributeSecurityCapabilities = 9,
     ProcThreadAttributeConsoleReference = 10,
     ProcThreadAttributeProtectionLevel = 11,
+    ProcThreadAttributeUnknown0 = 12,
     ProcThreadAttributeJobList = 13,
     ProcThreadAttributeChildProcessPolicy = 14,
     ProcThreadAttributeAllApplicationPackagesPolicy = 15,
     ProcThreadAttributeWin32kFilter = 16,
     ProcThreadAttributeSafeOpenPromptOriginClaim = 17,
+    ProcThreadAttributeDesktopAppPolicy = 18,
+    ProcThreadAttributeBnoIsolation = 19,
+    ProcThreadAttributeMax
 };
 
 #define PROC_THREAD_ATTRIBUTE_NUMBER    0x0000FFFF
 #define PROC_THREAD_ATTRIBUTE_THREAD    0x00010000  // Attribute may be used with thread creation
 #define PROC_THREAD_ATTRIBUTE_INPUT     0x00020000  // Attribute is input only
 #define PROC_THREAD_ATTRIBUTE_ADDITIVE  0x00040000  // Attribute may be "accumulated," e.g. bitmasks, counters, etc.
-
-#define PROTECTION_LEVEL_SAME               0xFFFFFFFF
 
 #define ProcThreadAttributeValue(Number, Thread, Input, Additive) \
     (((Number) & PROC_THREAD_ATTRIBUTE_NUMBER) | \
@@ -218,6 +338,8 @@ enum PROC_THREAD_ATTRIBUTE_NUM : UINT32
 
 #define PROC_THREAD_ATTRIBUTE_PARENT_PROCESS \
     ProcThreadAttributeValue (ProcThreadAttributeParentProcess, FALSE, TRUE, FALSE)
+#define PROC_THREAD_ATTRIBUTE_EXTENDED_FLAGS \
+    ProcThreadAttributeValue (ProcThreadAttributeExtendedFlags, FALSE, TRUE, TRUE)
 #define PROC_THREAD_ATTRIBUTE_HANDLE_LIST \
     ProcThreadAttributeValue (ProcThreadAttributeHandleList, FALSE, TRUE, FALSE)
 #define PROC_THREAD_ATTRIBUTE_GROUP_AFFINITY \
@@ -234,8 +356,26 @@ enum PROC_THREAD_ATTRIBUTE_NUM : UINT32
     ProcThreadAttributeValue (ProcThreadAttributePackageFullName, FALSE, TRUE, TRUE)
 #define PROC_THREAD_ATTRIBUTE_SECURITY_CAPABILITIES \
     ProcThreadAttributeValue (ProcThreadAttributeSecurityCapabilities, FALSE, TRUE, FALSE)
+#define PROC_THREAD_ATTRIBUTE_CONSOLE_REFERENCE \
+    ProcThreadAttributeValue (ProcThreadAttributeConsoleReference, FALSE, TRUE, FALSE)
 #define PROC_THREAD_ATTRIBUTE_PROTECTION_LEVEL \
     ProcThreadAttributeValue (ProcThreadAttributeProtectionLevel, FALSE, TRUE, FALSE)
+#define PROC_THREAD_ATTRIBUTE_UNKNOWN_0 \
+    ProcThreadAttributeValue (ProcThreadAttributeUnknown0, FALSE, TRUE, FALSE)
+#define PROC_THREAD_ATTRIBUTE_JOB_LIST \
+    ProcThreadAttributeValue (ProcThreadAttributeJobList, FALSE, TRUE, FALSE)
+#define PROC_THREAD_ATTRIBUTE_CHILD_PROCESS_POLICY \
+    ProcThreadAttributeValue (ProcThreadAttributeChildProcessPolicy, FALSE, TRUE, FALSE)
+#define PROC_THREAD_ATTRIBUTE_ALL_APPLICATION_PACKAGES_POLICY \
+    ProcThreadAttributeValue (ProcThreadAttributeAllApplicationPackagesPolicy, FALSE, TRUE, FALSE)
+#define PROC_THREAD_ATTRIBUTE_WIN32K_FILTER \
+    ProcThreadAttributeValue (ProcThreadAttributeWin32kFilter, FALSE, TRUE, FALSE)
+#define PROC_THREAD_ATTRIBUTE_SAFE_OPEN_PROMPT_ORIGIN_CLAIM \
+    ProcThreadAttributeValue (ProcThreadAttributeSafeOpenPromptOriginClaim, FALSE, TRUE, FALSE)
+#define PROC_THREAD_ATTRIBUTE_DESKTOP_APP_POLICY \
+    ProcThreadAttributeValue (ProcThreadAttributeDesktopAppPolicy, FALSE, TRUE, FALSE)
+#define PROC_THREAD_ATTRIBUTE_BNO_ISOLATION \
+    ProcThreadAttributeValue (ProcThreadAttributeBnoIsolation, FALSE, TRUE, FALSE)
 
 typedef struct _PROC_THREAD_ATTRIBUTE
 {
@@ -335,6 +475,62 @@ typedef struct _PS_STD_HANDLE_INFO
 
 }PS_STD_HANDLE_INFO, *PPS_STD_HANDLE_INFO;
 
+
+typedef enum _PS_PROTECTED_TYPE
+{
+    PsProtectedTypeNone,
+    PsProtectedTypeProtectedLight,
+    PsProtectedTypeProtected,
+    PsProtectedTypeMax
+} PS_PROTECTED_TYPE;
+
+typedef enum _PS_PROTECTED_SIGNER
+{
+    PsProtectedSignerNone,
+    PsProtectedSignerAuthenticode,
+    PsProtectedSignerCodeGen,
+    PsProtectedSignerAntimalware,
+    PsProtectedSignerLsa,
+    PsProtectedSignerWindows,
+    PsProtectedSignerWinTcb,
+    PsProtectedSignerWinSystem,
+    PsProtectedSignerApp,
+    PsProtectedSignerMax
+} PS_PROTECTED_SIGNER;
+
+#define PS_PROTECTED_SIGNER_MASK    0xFF
+#define PS_PROTECTED_AUDIT_MASK     0x08
+#define PS_PROTECTED_TYPE_MASK      0x07
+
+// e.g vProtectionLevel.Level = PsProtectedValue(PsProtectedSignerCodeGen, FALSE, PsProtectedTypeProtectedLight)
+#define PsProtectedValue(aSigner, aAudit, aType) \
+    ( \
+    ((aSigner & PS_PROTECTED_SIGNER_MASK) << 4) | \
+    ((aAudit & PS_PROTECTED_AUDIT_MASK) << 3) | \
+    (aType & PS_PROTECTED_TYPE_MASK)\
+    )
+
+// e.g InitializePsProtection(&vProtectionLevel, PsProtectedSignerCodeGen, FALSE, PsProtectedTypeProtectedLight)
+#define InitializePsProtection(aProtectionLevelPtr, aSigner, aAudit, aType) { \
+    (aProtectionLevelPtr)->Signer = aSigner;  \
+    (aProtectionLevelPtr)->Audit = aAudit;    \
+    (aProtectionLevelPtr)->Type = aType;      \
+    }
+
+typedef struct _PS_PROTECTION
+{
+    union
+    {
+        UINT8 Level;
+        struct
+        {
+            UINT8 Type : 3;
+            UINT8 Audit : 1;
+            UINT8 Signer : 4;
+        };
+    };
+} PS_PROTECTION, *PPS_PROTECTION;
+
 enum PS_ATTRIBUTE_NUM : UINT32
 {
     PsAttributeParentProcess,       // in HANDLE
@@ -354,7 +550,7 @@ enum PS_ATTRIBUTE_NUM : UINT32
     PsAttributeIdealProcessor,      // in PPROCESSOR_NUMBER
     PsAttributeUmsThread,           // ? in PUMS_CREATE_THREAD_ATTRIBUTES
     PsAttributeMitigationOptions,   // in UINT8
-    PsAttributeProtectionLevel,     // in UINT32
+    PsAttributeProtectionLevel,     // in UINT8
     PsAttributeSecureProcess,       // since THRESHOLD
     PsAttributeJobList,
     PsAttributeChildProcessPolicy,  // since THRESHOLD2
@@ -407,10 +603,29 @@ enum PS_ATTRIBUTE_NUM : UINT32
     PsAttributeValue(PsAttributePreferredNode, FALSE, TRUE, FALSE)
 #define PS_ATTRIBUTE_IDEAL_PROCESSOR \
     PsAttributeValue(PsAttributeIdealProcessor, TRUE, TRUE, FALSE)
+#define PS_ATTRIBUTE_UMS_THREAD \
+    PsAttributeValue(PsAttributeUmsThread, TRUE, TRUE, FALSE)
 #define PS_ATTRIBUTE_MITIGATION_OPTIONS \
     PsAttributeValue(PsAttributeMitigationOptions, FALSE, TRUE, TRUE)
 #define PS_ATTRIBUTE_PROTECTION_LEVEL \
-    PsAttributeValue(PsAttributeProtectionLevel, FALSE, TRUE, FALSE)
+    PsAttributeValue(PsAttributeProtectionLevel, FALSE, TRUE, TRUE)
+#define PS_ATTRIBUTE_SECURE_PROCESS \
+    PsAttributeValue(PsAttributeSecureProcess, FALSE, TRUE, FALSE)
+#define PS_ATTRIBUTE_JOB_LIST \
+    PsAttributeValue(PsAttributeJobList, FALSE, TRUE, FALSE)
+#define PS_ATTRIBUTE_CHILD_PROCESS_POLICY \
+    PsAttributeValue(PsAttributeChildProcessPolicy, FALSE, TRUE, FALSE)
+#define PS_ATTRIBUTE_ALL_APPLICATION_PACKAGES_POLICY \
+    PsAttributeValue(PsAttributeAllApplicationPackagesPolicy, FALSE, TRUE, FALSE)
+#define PS_ATTRIBUTE_WIN32K_FILTER \
+    PsAttributeValue(PsAttributeWin32kFilter, FALSE, TRUE, FALSE)
+#define PS_ATTRIBUTE_SAFE_OPEN_PROMPT_ORIGIN_CLAIM \
+    PsAttributeValue(PsAttributeSafeOpenPromptOriginClaim, FALSE, TRUE, FALSE)
+#define PS_ATTRIBUTE_BNO_ISOLATION \
+    PsAttributeValue(PsAttributeBnoIsolation, FALSE, TRUE, FALSE)
+#define PS_ATTRIBUTE_DESKTOP_APP_POLICY \
+    PsAttributeValue(PsAttributeDesktopAppPolicy, FALSE, TRUE, FALSE)
+
 
 typedef struct _PS_ATTRIBUTE
 {

@@ -211,7 +211,6 @@
     <ClInclude Include="..\Include\ntrtl.h" />
     <ClInclude Include="..\Include\ntseapi.h" />
     <ClInclude Include="..\Include\ntstatus.h" />
-    <ClInclude Include="..\Include\subsystembase.h" />
     <ClInclude Include="CreateProcessInternal.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

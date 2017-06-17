@@ -152,8 +152,8 @@ enum CREATE_ENVIRONMENT_FLAGS : UINT32
     RTL_CREATE_ENVIRONMENT_EMPTY = 0x4,                 // create empty environment block
 };
 
-NTSTATUS RtlCreateEnvironmentEx(
+extern"C" NTSTATUS RtlCreateEnvironmentEx(
     void* SourceEnv,
     void** Environment,
     UINT32 Flags);
-NTSTATUS RtlDestroyEnvironment(void* Environment);
+extern"C" NTSTATUS RtlDestroyEnvironment(void* Environment);

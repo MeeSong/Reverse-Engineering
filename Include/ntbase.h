@@ -81,7 +81,19 @@ enum : BOOL
 #define DUMMYSTRUCTNAME5
 #define DUMMYSTRUCTNAME6
 
+
+#ifdef DEBUG
+#define assert(expression) (void)( (!!(expression)) || (__int2c(), FALSE) )
+#else
+#define assert(expression) ((void)0)
+#endif // DEBUG
+
+
 #define offsetof(s,m) ((size_t)&reinterpret_cast<char const volatile&>((((s*)0)->m)))
+
+#define ANYSIZE_ARRAY 1   
+
+#define INVALID_HANDLE_VALUE ((HANDLE)(UINT_PTR)-1)
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -138,6 +150,32 @@ typedef struct _GUID {
     unsigned short Data3;
     unsigned char  Data4[8];
 } GUID;
+
+typedef struct _SID_IDENTIFIER_AUTHORITY 
+{
+    BYTE  Value[6];
+} SID_IDENTIFIER_AUTHORITY, *PSID_IDENTIFIER_AUTHORITY;
+
+typedef struct _SID 
+{
+    BYTE  Revision;
+    BYTE  SubAuthorityCount;
+    SID_IDENTIFIER_AUTHORITY IdentifierAuthority;
+    UINT32 SubAuthority[ANYSIZE_ARRAY];
+} SID, *PISID;
+
+typedef struct _SID_AND_ATTRIBUTES {
+    PISID Sid;
+    UINT32 Attributes;
+} SID_AND_ATTRIBUTES, *PSID_AND_ATTRIBUTES;
+
+using KAFFINITY = UINT_PTR;
+
+typedef struct _GROUP_AFFINITY {
+    KAFFINITY Mask;
+    UINT16 Group;
+    UINT16 Reserved[3];
+} GROUP_AFFINITY, *PGROUP_AFFINITY;
 
 typedef struct _ANSI_STRING
 {
