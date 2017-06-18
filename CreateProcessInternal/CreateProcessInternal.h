@@ -4,9 +4,10 @@
 //////////////////////////////////////////////////////////////////////////
 
 using fun$BaseFormatObjectAttributes = NTSTATUS(__stdcall *)(
-    OBJECT_ATTRIBUTES* aObjectAttributes,
+    OBJECT_ATTRIBUTES* aLocalObjectAttributes,
     SECURITY_ATTRIBUTES* aSecurityAttributes,
-    UNICODE_STRING* aObjectName);
+    UNICODE_STRING* aObjectName,
+    OBJECT_ATTRIBUTES** aObjectAttributes);
 
 
 using fun$BaseIsDosApplication = UINT32(__stdcall *)(

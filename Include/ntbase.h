@@ -151,24 +151,6 @@ typedef struct _GUID {
     unsigned char  Data4[8];
 } GUID;
 
-typedef struct _SID_IDENTIFIER_AUTHORITY 
-{
-    BYTE  Value[6];
-} SID_IDENTIFIER_AUTHORITY, *PSID_IDENTIFIER_AUTHORITY;
-
-typedef struct _SID 
-{
-    BYTE  Revision;
-    BYTE  SubAuthorityCount;
-    SID_IDENTIFIER_AUTHORITY IdentifierAuthority;
-    UINT32 SubAuthority[ANYSIZE_ARRAY];
-} SID, *PISID;
-
-typedef struct _SID_AND_ATTRIBUTES {
-    PISID Sid;
-    UINT32 Attributes;
-} SID_AND_ATTRIBUTES, *PSID_AND_ATTRIBUTES;
-
 using KAFFINITY = UINT_PTR;
 
 typedef struct _GROUP_AFFINITY {

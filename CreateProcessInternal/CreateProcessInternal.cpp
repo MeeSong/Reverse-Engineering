@@ -634,6 +634,9 @@ BOOL CreateProcessInternal(
     UINT32 vPsAttributesCount{ 0 };
     PS_ATTRIBUTE_LIST *vPsAttributeList{ nullptr };
 
+    OBJECT_ATTRIBUTES *vProcessObjectAttribute{ nullptr };
+    OBJECT_ATTRIBUTES *vThreadObjectAttribute{ nullptr };
+
     for (;;)
     {
         //
@@ -939,6 +942,27 @@ BOOL CreateProcessInternal(
                 vDosError = ERROR_DIRECTORY;
                 break;
             }
+        }
+
+        OBJECT_ATTRIBUTES vLocalProcessObjectAttribute{};
+        OBJECT_ATTRIBUTES vLocalThreadObjectAttribute{};
+
+        vStatus = BaseFormatObjectAttributes(
+            &vLocalProcessObjectAttribute, aProcessAttributes, 
+            nullptr, &vProcessObjectAttribute);
+        if (!NT_SUCCESS(vStatus))
+        {
+            vDosError = RtlNtStatusToDosError(vStatus);
+            break;
+        }
+
+        vStatus = BaseFormatObjectAttributes(
+            &vLocalThreadObjectAttribute, aThreadAttributes,
+            nullptr, &vThreadObjectAttribute);
+        if (!NT_SUCCESS(vStatus))
+        {
+            vDosError = RtlNtStatusToDosError(vStatus);
+            break;
         }
         
         //

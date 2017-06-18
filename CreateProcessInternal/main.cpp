@@ -2,6 +2,7 @@
 #include <hresult.h>
 #include <ntpsapi.h>
 #include <ntrtl.h>
+#include <ntseapi.h>
 
 #include <functional>
 
@@ -29,38 +30,74 @@ typedef struct tagPROCESSENTRY32W
 #define TH32CS_SNAPALL      (TH32CS_SNAPHEAPLIST | TH32CS_SNAPPROCESS | TH32CS_SNAPTHREAD | TH32CS_SNAPMODULE)
 #define TH32CS_INHERIT      0x80000000
 
-extern "C" HANDLE OpenProcess(
-    UINT32 dwDesiredAccess, BOOL bInheritHandle, UINT32 dwProcessId);
+extern "C"
+{
+    HANDLE OpenProcess(
+        UINT32 dwDesiredAccess, BOOL bInheritHandle, UINT32 dwProcessId);
 
-extern"C" HANDLE CreateToolhelp32Snapshot(
-    UINT32 dwFlags,
-    UINT32 th32ProcessID);
+    HANDLE CreateToolhelp32Snapshot(
+        UINT32 dwFlags,
+        UINT32 th32ProcessID);
 
-extern"C" BOOL Process32FirstW(HANDLE hSnapshot, PPROCESSENTRY32W lppe);
-extern"C" BOOL Process32NextW(HANDLE hSnapshot, PPROCESSENTRY32W lppe);
+    BOOL Process32FirstW(HANDLE hSnapshot, PPROCESSENTRY32W lppe);
+    BOOL Process32NextW(HANDLE hSnapshot, PPROCESSENTRY32W lppe);
 
-extern"C" BOOL CloseHandle(HANDLE hObject);
+    BOOL CloseHandle(HANDLE hObject);
 
-extern"C" BOOL InitializeProcThreadAttributeList(
-    LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList,
-    UINT32 dwAttributeCount,
-    UINT32 dwFlags,
-    SIZE_T* lpSize);
+    BOOL InitializeProcThreadAttributeList(
+        LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList,
+        UINT32 dwAttributeCount,
+        UINT32 dwFlags,
+        SIZE_T* lpSize);
 
-extern"C" BOOL UpdateProcThreadAttribute(
-    LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList,
-    UINT32 dwFlags,
-    UINT_PTR Attribute,
-    void* lpValue,
-    SIZE_T cbSize,
-    void* lpPreviousValue,
-    SIZE_T* lpReturnSize);
+    BOOL UpdateProcThreadAttribute(
+        LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList,
+        UINT32 dwFlags,
+        UINT_PTR Attribute,
+        void* lpValue,
+        SIZE_T cbSize,
+        void* lpPreviousValue,
+        SIZE_T* lpReturnSize);
 
-extern"C" void DeleteProcThreadAttributeList(LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList);
+    void DeleteProcThreadAttributeList(LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList);
 
-extern"C" int lstrcmpiW(
-    PCWSTR lpString1,
-    PCWSTR lpString2);
+    int lstrcmpiW(
+        PCWSTR lpString1,
+        PCWSTR lpString2);
+
+    BOOL AllocateAndInitializeSid(
+            PSID_IDENTIFIER_AUTHORITY pIdentifierAuthority,
+            BYTE nSubAuthorityCount,
+            UINT32 nSubAuthority0,
+            UINT32 nSubAuthority1,
+            UINT32 nSubAuthority2,
+            UINT32 nSubAuthority3,
+            UINT32 nSubAuthority4,
+            UINT32 nSubAuthority5,
+            UINT32 nSubAuthority6,
+            UINT32 nSubAuthority7,
+            PSID * pSid
+        );
+
+    UINT32 SetEntriesInAclW(
+            UINT32 cCountOfExplicitEntries,
+            PEXPLICIT_ACCESSW  pListOfExplicitEntries,
+            PACL           OldAcl,
+            PACL              * NewAcl);
+
+    BOOL InitializeSecurityDescriptor(PSECURITY_DESCRIPTOR pSecurityDescriptor, UINT32 dwRevision);
+
+    BOOL SetSecurityDescriptorDacl(
+            PSECURITY_DESCRIPTOR pSecurityDescriptor,
+            BOOL bDaclPresent,
+            PACL pDacl,
+            BOOL bDaclDefaulted);
+
+    void* FreeSid(PSID pSid);
+
+    HANDLE LocalFree(HANDLE hMem);
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -119,6 +156,11 @@ int main(int /*argc*/, char** /*argv*/, char** /*envp*/)
     HANDLE vParentHandle = nullptr;
     PROC_THREAD_ATTRIBUTE_LIST* vAttributeList = nullptr;
 
+    PSID vEveryoneSID{ nullptr };
+    PSID vAdminSID{ nullptr };
+    PSECURITY_DESCRIPTOR vSecurityDescriptor{ nullptr };
+    PACL vAcl{ nullptr };
+
     for (;;)
     {
         HRESULT hr{ S_OK };
@@ -126,6 +168,10 @@ int main(int /*argc*/, char** /*argv*/, char** /*envp*/)
         wchar_t vCmd[] = { L"notepad" };
         STARTUPINFOEXW vStartup{ sizeof(vStartup) };
         PROCESS_INFORMATION vProcessInfo{};
+
+        //
+        // 寻找 Explorer 作为创建进程的父进程
+        //
 
         UINT32 vExplorerPid{ 0 };
 
@@ -190,11 +236,82 @@ int main(int /*argc*/, char** /*argv*/, char** /*envp*/)
 
         vStartup.lpAttributeList = vAttributeList;
 
+        //
+        // 设置安全描述符 
+        //
+
+        EXPLICIT_ACCESSW vExplicitAccess[2]{ 0 };
+
+        SID_IDENTIFIER_AUTHORITY vSIDAuthWorld = SECURITY_WORLD_SID_AUTHORITY;
+        SID_IDENTIFIER_AUTHORITY vSIDAuthNT = SECURITY_NT_AUTHORITY;
+
+        if (!AllocateAndInitializeSid(&vSIDAuthWorld, 1, SECURITY_WORLD_RID,
+            0, 0, 0, 0, 0, 0, 0, &vEveryoneSID))
+        {
+            hr = HRESULT_FROM_WIN32(GetLastError());
+            break;
+        }
+
+        vExplicitAccess[0].grfAccessPermissions = PROCESS_QUERY_INFORMATION;
+        vExplicitAccess[0].grfAccessMode = SET_ACCESS;
+        vExplicitAccess[0].grfInheritance = NO_INHERITANCE;
+        vExplicitAccess[0].Trustee.TrusteeForm = TRUSTEE_IS_SID;
+        vExplicitAccess[0].Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
+        vExplicitAccess[0].Trustee.pSid = vEveryoneSID;
+
+        if (!AllocateAndInitializeSid(&vSIDAuthNT, 2, SECURITY_BUILTIN_DOMAIN_RID,
+            DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &vAdminSID))
+        {
+            hr = HRESULT_FROM_WIN32(GetLastError());
+            break;
+        }
+
+        vExplicitAccess[1].grfAccessPermissions = PROCESS_QUERY_INFORMATION;
+        vExplicitAccess[1].grfAccessMode = SET_ACCESS;
+        vExplicitAccess[1].grfInheritance = NO_INHERITANCE;
+        vExplicitAccess[1].Trustee.TrusteeForm = TRUSTEE_IS_SID;
+        vExplicitAccess[1].Trustee.TrusteeType = TRUSTEE_IS_GROUP;
+        vExplicitAccess[1].Trustee.pSid = vAdminSID;
+
+        hr = HRESULT_FROM_WIN32(SetEntriesInAclW(2, vExplicitAccess, nullptr, &vAcl));
+        if (FAILED(hr))
+        {
+            break;
+        }
+
+        vSecurityDescriptor = new SECURITY_DESCRIPTOR{};
+        if (nullptr == vSecurityDescriptor)
+        {
+            hr = E_OUTOFMEMORY;
+            break;
+        }
+
+        if (!InitializeSecurityDescriptor(vSecurityDescriptor,
+            SECURITY_DESCRIPTOR_REVISION))
+        {
+            hr = HRESULT_FROM_WIN32(GetLastError());
+            break;
+        }
+
+        if (!SetSecurityDescriptorDacl(vSecurityDescriptor, TRUE, vAcl, FALSE))
+        {
+            hr = HRESULT_FROM_WIN32(GetLastError());
+            break;
+        }
+
+        SECURITY_ATTRIBUTES vSecurityAttributes{ sizeof(vSecurityAttributes) };
+        vSecurityAttributes.bInheritHandle = FALSE;
+        vSecurityAttributes.lpSecurityDescriptor = vSecurityDescriptor;
+
+        //
+        // 调用高仿的 CreateProcessInternal
+        //
+
         vResult = CreateProcessInternal(
             nullptr,
             nullptr,
             vCmd,
-            nullptr,
+            &vSecurityAttributes,
             nullptr,
             FALSE,
             EXTENDED_STARTUPINFO_PRESENT,
@@ -207,6 +324,25 @@ int main(int /*argc*/, char** /*argv*/, char** /*envp*/)
         break;
     }
 
+    if (vEveryoneSID)
+    {
+        FreeSid(vEveryoneSID);
+    }
+
+    if (vAdminSID)
+    {
+        FreeSid(vAdminSID);
+    }
+
+    if (vAcl)
+    {
+        LocalFree(vAcl);
+    }
+
+    if (vSecurityDescriptor)
+    {
+        delete vSecurityDescriptor;
+    }
 
     if (vAttributeList)
     {

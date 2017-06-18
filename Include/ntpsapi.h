@@ -350,12 +350,6 @@ enum STARTUP_INFO_FLAGS : UINT32
 // Struct and flag for CreateProcessInternal
 //
 
-typedef struct _SECURITY_CAPABILITIES {
-    PISID AppContainerSid;
-    PSID_AND_ATTRIBUTES Capabilities;
-    UINT32 CapabilityCount;
-    UINT32 Reserved;
-} SECURITY_CAPABILITIES, *PSECURITY_CAPABILITIES, *LPSECURITY_CAPABILITIES;
 
 typedef struct _UMS_CREATE_THREAD_ATTRIBUTES {
     UINT32 UmsVersion;
