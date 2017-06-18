@@ -119,11 +119,11 @@ DOSERROR InitializeDependentFunction()
         }
 
         vIsInitialize = true;
-        SetLastError(ERROR_SUCCESS);
+        RtlSetLastWin32Error(ERROR_SUCCESS);
         break;
     }
 
-    vDosError = (DOSERROR)GetLastError();
+    vDosError = RtlGetLastWin32Error();
     return vDosError;
 }
 
@@ -167,7 +167,7 @@ NTSTATUS BasepConvertWin32AttributeList(
     HANDLE* aConsoleHandle,
     UINT64* aMitigationPolicyFlags,
     PS_ATTRIBUTE_LIST* aPsAttributeList,
-    UINT32* aPsAttrubuteCount,
+    UINT32* aPsAttrubutesCount,
     UINT32 aMaxPsAttributeCount)
 {
     NTSTATUS vStatus{ STATUS_SUCCESS };
@@ -177,8 +177,8 @@ NTSTATUS BasepConvertWin32AttributeList(
     //
 
     assert(aIsThread || (aPackageFullName && aSecurityCapabilities));
-    assert(*aPsAttrubuteCount < aMaxPsAttributeCount);
-    assert(aMaxPsAttributeCount - *aPsAttrubuteCount >= 8);
+    assert(*aPsAttrubutesCount < aMaxPsAttributeCount);
+    assert(aMaxPsAttributeCount - *aPsAttrubutesCount >= 8);
 
     if ((aThreadAttributeList->LastAttribute > aThreadAttributeList->AttributeCount)
         || (aThreadAttributeList->LastAttribute > ProcThreadAttributeMax))
@@ -190,7 +190,7 @@ NTSTATUS BasepConvertWin32AttributeList(
     // 处理 Thread attribute list
     //
 
-    UINT32 vPsAttrubuteCount = *aPsAttrubuteCount;
+    UINT32 vPsAttributesCount = *aPsAttrubutesCount;
     UINT32 vPresentFlags{ 0 };
     UINT32 vExtendedFlags{ 0 };
 
@@ -231,12 +231,12 @@ NTSTATUS BasepConvertWin32AttributeList(
                     break;
                 }
 
-                aPsAttributeList->Attributes[vPsAttrubuteCount].Attribute = PS_ATTRIBUTE_PARENT_PROCESS;
-                aPsAttributeList->Attributes[vPsAttrubuteCount].Size = sizeof(HANDLE);
-                aPsAttributeList->Attributes[vPsAttrubuteCount].ValuePtr = *(HANDLE*)(vAttribute->Value);
-                aPsAttributeList->Attributes[vPsAttrubuteCount].ReturnLength = nullptr;
+                aPsAttributeList->Attributes[vPsAttributesCount].Attribute = PS_ATTRIBUTE_PARENT_PROCESS;
+                aPsAttributeList->Attributes[vPsAttributesCount].Size = sizeof(HANDLE);
+                aPsAttributeList->Attributes[vPsAttributesCount].ValuePtr = *(HANDLE*)(vAttribute->Value);
+                aPsAttributeList->Attributes[vPsAttributesCount].ReturnLength = nullptr;
 
-                ++vPsAttrubuteCount;
+                ++vPsAttributesCount;
 
                 *aParentProcessHandle = *(HANDLE*)(vAttribute->Value);
                 vInsertPsAttribute = false;
@@ -345,12 +345,12 @@ NTSTATUS BasepConvertWin32AttributeList(
                     break;
                 }
 
-                aPsAttributeList->Attributes[vPsAttrubuteCount].Attribute = PS_ATTRIBUTE_SECURE_PROCESS;
-                aPsAttributeList->Attributes[vPsAttrubuteCount].Size = sizeof(UINT64);
-                aPsAttributeList->Attributes[vPsAttrubuteCount].ValuePtr = aMitigationPolicyFlags;
-                aPsAttributeList->Attributes[vPsAttrubuteCount].ReturnLength = nullptr;
+                aPsAttributeList->Attributes[vPsAttributesCount].Attribute = PS_ATTRIBUTE_SECURE_PROCESS;
+                aPsAttributeList->Attributes[vPsAttributesCount].Size = sizeof(UINT64);
+                aPsAttributeList->Attributes[vPsAttributesCount].ValuePtr = aMitigationPolicyFlags;
+                aPsAttributeList->Attributes[vPsAttributesCount].ReturnLength = nullptr;
 
-                ++vPsAttrubuteCount;
+                ++vPsAttributesCount;
                 vInsertPsAttribute = false;
                 break;
             }
@@ -509,12 +509,12 @@ NTSTATUS BasepConvertWin32AttributeList(
                     break;
                 }
 
-                assert(vPsAttrubuteCount < aMaxPsAttributeCount);
+                assert(vPsAttributesCount < aMaxPsAttributeCount);
 
-                aPsAttributeList->Attributes[vPsAttrubuteCount].Attribute = PS_ATTRIBUTE_PROTECTION_LEVEL;
-                aPsAttributeList->Attributes[vPsAttrubuteCount].Size = sizeof(vProtectionLevel);
-                aPsAttributeList->Attributes[vPsAttrubuteCount].Value = vProtectionLevel.Level;
-                aPsAttributeList->Attributes[vPsAttrubuteCount].ReturnLength = nullptr;
+                aPsAttributeList->Attributes[vPsAttributesCount].Attribute = PS_ATTRIBUTE_PROTECTION_LEVEL;
+                aPsAttributeList->Attributes[vPsAttributesCount].Size = sizeof(vProtectionLevel);
+                aPsAttributeList->Attributes[vPsAttributesCount].Value = vProtectionLevel.Level;
+                aPsAttributeList->Attributes[vPsAttributesCount].ReturnLength = nullptr;
 
                 vInsertPsAttribute = false;
                 break;
@@ -529,19 +529,19 @@ NTSTATUS BasepConvertWin32AttributeList(
 
             if (vInsertPsAttribute)
             {
-                assert(vPsAttrubuteCount < aMaxPsAttributeCount);
+                assert(vPsAttributesCount < aMaxPsAttributeCount);
 
-                aPsAttributeList->Attributes[vPsAttrubuteCount].Attribute = vPsAttribute;
-                aPsAttributeList->Attributes[vPsAttrubuteCount].Size = vAttribute->Size;
-                aPsAttributeList->Attributes[vPsAttrubuteCount].Value = vAttribute->Value;
-                aPsAttributeList->Attributes[vPsAttrubuteCount].ReturnLength = nullptr;
+                aPsAttributeList->Attributes[vPsAttributesCount].Attribute = vPsAttribute;
+                aPsAttributeList->Attributes[vPsAttributesCount].Size = vAttribute->Size;
+                aPsAttributeList->Attributes[vPsAttributesCount].Value = vAttribute->Value;
+                aPsAttributeList->Attributes[vPsAttributesCount].ReturnLength = nullptr;
             }
 
             vPresentFlags |= vPresentFlag;
         }
     }
 
-    assert(vPsAttrubuteCount <= aMaxPsAttributeCount);
+    assert(vPsAttributesCount <= aMaxPsAttributeCount);
 
     if (aThreadAttributeList->PresentFlags & ~vPresentFlags & 2)
     {
@@ -572,7 +572,7 @@ NTSTATUS BasepConvertWin32AttributeList(
         return vStatus;
     }
 
-    *aPsAttrubuteCount = vPsAttrubuteCount;
+    *aPsAttrubutesCount = vPsAttributesCount;
     *aExtendedFlags = vExtendedFlags;
 
     return vStatus;
@@ -601,12 +601,13 @@ BOOL CreateProcessInternal(
     vDosError = InitializeDependentFunction();
     if (ERROR_SUCCESS != vDosError)
     {
-        SetLastError(vDosError);
+        RtlSetLastWin32Error(vDosError);
         return vResult;
     }
 
+    wchar_t *vCurrentDirectory{ nullptr };
 
-    UINT32 vPriorityClass{ PROCESS_PRIORITY_CLASS_INVALID };
+    UINT8 vPriorityClass{ PROCESS_PRIORITY_CLASS_INVALID };
     UINT32 vProcessCreateFlags{};
     UINT32 vThreadCreateFlags{ THREAD_CREATE_FLAGS_CREATE_SUSPENDED };
 
@@ -630,7 +631,7 @@ BOOL CreateProcessInternal(
     CLIENT_ID vClientId{};
     SECTION_IMAGE_INFORMATION vImageInfo{};
 
-    UINT32 vPsAttributeCount{ 0 };
+    UINT32 vPsAttributesCount{ 0 };
     PS_ATTRIBUTE_LIST *vPsAttributeList{ nullptr };
 
     for (;;)
@@ -642,14 +643,14 @@ BOOL CreateProcessInternal(
         if ((!aApplicationName && !aCommandLine)
             || (!aProcessInformation || !aStartupInfo))
         {
-            vDosError = (DOSERROR)RtlNtStatusToDosError(STATUS_INVALID_PARAMETER);
+            vDosError = RtlNtStatusToDosError(STATUS_INVALID_PARAMETER);
             break;
         }
 
         if ((aCreationFlags & (DETACHED_PROCESS | CREATE_NEW_CONSOLE))
             == (DETACHED_PROCESS | CREATE_NEW_CONSOLE))
         {
-            vDosError = (DOSERROR)RtlNtStatusToDosError(STATUS_INVALID_PARAMETER);
+            vDosError = RtlNtStatusToDosError(STATUS_INVALID_PARAMETER);
             break;
         }
 
@@ -657,7 +658,7 @@ BOOL CreateProcessInternal(
             && (aCreationFlags & CREATE_SHARED_WOW_VDM))
         {
             // 不能同时请求分离和共享的 VDM
-            vDosError = (DOSERROR)RtlNtStatusToDosError(STATUS_INVALID_PARAMETER);
+            vDosError = RtlNtStatusToDosError(STATUS_INVALID_PARAMETER);
             break;
         }
         else if (!(aCreationFlags & CREATE_SHARED_WOW_VDM)
@@ -700,10 +701,17 @@ BOOL CreateProcessInternal(
             vPriorityClass = PROCESS_PRIORITY_CLASS_INVALID;
         }
 
+        aCreationFlags &=
+            ~(NORMAL_PRIORITY_CLASS
+                | IDLE_PRIORITY_CLASS
+                | HIGH_PRIORITY_CLASS
+                | REALTIME_PRIORITY_CLASS
+                | BELOW_NORMAL_PRIORITY_CLASS
+                | ABOVE_NORMAL_PRIORITY_CLASS);
+
         //
         // 转换 CreateFlags
         //
-
 
         if (aCreationFlags & CREATE_PROTECTED_PROCESS)
         {
@@ -739,7 +747,7 @@ BOOL CreateProcessInternal(
             vStatus = DbgUiConnectToDbg();
             if (!NT_SUCCESS(vStatus))
             {
-                vDosError = (DOSERROR)RtlNtStatusToDosError(vStatus);
+                vDosError = RtlNtStatusToDosError(vStatus);
                 break;
             }
 
@@ -757,48 +765,51 @@ BOOL CreateProcessInternal(
 
         BYTE vPsAttributeListBuffer[sizeof(PS_ATTRIBUTE_LIST) + 14 * sizeof(PS_ATTRIBUTE)]{};
         vPsAttributeList = (PS_ATTRIBUTE_LIST*)vPsAttributeListBuffer;
-        vPsAttributeCount = 3;
+        vPsAttributesCount = 3;
 
         vPsAttributeList->Attributes[0].Attribute = PS_ATTRIBUTE_IMAGE_NAME;
+        vPsAttributeList->Attributes[0].ReturnLength = nullptr;
 
         vPsAttributeList->Attributes[1].Attribute = PS_ATTRIBUTE_CLIENT_ID;
         vPsAttributeList->Attributes[1].Size = sizeof(vClientId);
         vPsAttributeList->Attributes[1].ValuePtr = &vClientId;
+        vPsAttributeList->Attributes[1].ReturnLength = nullptr;
 
         vPsAttributeList->Attributes[2].Attribute = PS_ATTRIBUTE_IMAGE_INFO;
         vPsAttributeList->Attributes[2].Size = sizeof(vImageInfo);
         vPsAttributeList->Attributes[2].ValuePtr = &vImageInfo;
+        vPsAttributeList->Attributes[2].ReturnLength = nullptr;
 
         if (vDebugObject)
         {
-            vPsAttributeList->Attributes[vPsAttributeCount].Attribute = PS_ATTRIBUTE_DEBUG_PORT;
-            vPsAttributeList->Attributes[vPsAttributeCount].Size = sizeof(vDebugObject);
-            vPsAttributeList->Attributes[vPsAttributeCount].ValuePtr = vDebugObject;
-            ++vPsAttributeCount;
+            vPsAttributeList->Attributes[vPsAttributesCount].Attribute = PS_ATTRIBUTE_DEBUG_PORT;
+            vPsAttributeList->Attributes[vPsAttributesCount].Size = sizeof(vDebugObject);
+            vPsAttributeList->Attributes[vPsAttributesCount].ValuePtr = vDebugObject;
+            ++vPsAttributesCount;
         }
 
         if (PROCESS_PRIORITY_CLASS_INVALID != vPriorityClass)
         {
-            vPsAttributeList->Attributes[vPsAttributeCount].Attribute = PS_ATTRIBUTE_PRIORITY_CLASS;
-            vPsAttributeList->Attributes[vPsAttributeCount].Size = sizeof(vPriorityClass);
-            vPsAttributeList->Attributes[vPsAttributeCount].ValuePtr = &vPriorityClass;
-            ++vPsAttributeCount;
+            vPsAttributeList->Attributes[vPsAttributesCount].Attribute = PS_ATTRIBUTE_PRIORITY_CLASS;
+            vPsAttributeList->Attributes[vPsAttributesCount].Size = sizeof(vPriorityClass);
+            vPsAttributeList->Attributes[vPsAttributesCount].ValuePtr = &vPriorityClass;
+            ++vPsAttributesCount;
         }
 
         if (aCreationFlags & CREATE_DEFAULT_ERROR_MODE)
         {
-            vPsAttributeList->Attributes[vPsAttributeCount].Attribute = PS_ATTRIBUTE_ERROR_MODE;
-            vPsAttributeList->Attributes[vPsAttributeCount].Size = sizeof(vErrorMode);
-            vPsAttributeList->Attributes[vPsAttributeCount].ValuePtr = &vErrorMode;
-            ++vPsAttributeCount;
+            vPsAttributeList->Attributes[vPsAttributesCount].Attribute = PS_ATTRIBUTE_ERROR_MODE;
+            vPsAttributeList->Attributes[vPsAttributesCount].Size = sizeof(vErrorMode);
+            vPsAttributeList->Attributes[vPsAttributesCount].ValuePtr = &vErrorMode;
+            ++vPsAttributesCount;
         }
 
         if (aToken)
         {
-            vPsAttributeList->Attributes[vPsAttributeCount].Attribute = PS_ATTRIBUTE_TOKEN;
-            vPsAttributeList->Attributes[vPsAttributeCount].Size = sizeof(aToken);
-            vPsAttributeList->Attributes[vPsAttributeCount].ValuePtr = aToken;
-            ++vPsAttributeCount;
+            vPsAttributeList->Attributes[vPsAttributesCount].Attribute = PS_ATTRIBUTE_TOKEN;
+            vPsAttributeList->Attributes[vPsAttributesCount].Size = sizeof(aToken);
+            vPsAttributeList->Attributes[vPsAttributesCount].ValuePtr = aToken;
+            ++vPsAttributesCount;
         }
 
         RtlSecureZeroMemory(aProcessInformation, sizeof(*aProcessInformation));
@@ -814,7 +825,7 @@ BOOL CreateProcessInternal(
                 RTL_CREATE_ENVIRONMENT_TRANSLATE);
             if (!NT_SUCCESS(vStatus))
             {
-                vDosError = (DOSERROR)RtlNtStatusToDosError(vStatus);
+                vDosError = RtlNtStatusToDosError(vStatus);
                 break;
             }
 
@@ -832,7 +843,7 @@ BOOL CreateProcessInternal(
         {
             if (vStartupInfo.StartupInfo.cb != sizeof(STARTUPINFOEXW))
             {
-                vDosError = (DOSERROR)RtlNtStatusToDosError(STATUS_INVALID_PARAMETER);
+                vDosError = RtlNtStatusToDosError(STATUS_INVALID_PARAMETER);
                 break;
             }
 
@@ -852,22 +863,27 @@ BOOL CreateProcessInternal(
                     &vConsoleHandle,
                     &vMitigationPolicyFlags,
                     vPsAttributeList,
-                    &vPsAttributeCount,
+                    &vPsAttributesCount,
                     15);
 
                 if (!NT_SUCCESS(vStatus))
                 {
-                    vDosError = (DOSERROR)RtlNtStatusToDosError(vStatus);
+                    vDosError = RtlNtStatusToDosError(vStatus);
                     break;
                 }
 
-                assert(vPsAttributeCount <= 15);
+                assert(vPsAttributesCount <= 15);
 
                 if ((vStartupInfo.lpAttributeList->PresentFlags & (1 << ProcThreadAttributeConsoleReference))
-                    && (vParentProcessHandle))
+                    && (vParentProcessHandle || vSecurityCapabilities))
                 {
-                    vDosError = (DOSERROR)RtlNtStatusToDosError(STATUS_INVALID_PARAMETER);
+                    vDosError = RtlNtStatusToDosError(STATUS_INVALID_PARAMETER);
                     break;
+                }
+
+                if (vExtendedFlags & 4)
+                {
+                    vProcessCreateFlags |= PROCESS_CREATE_FLAGS_EXTENDED_UNKNOWN; // 0x400
                 }
             }
         }
@@ -880,7 +896,7 @@ BOOL CreateProcessInternal(
         if (!(aCreationFlags & CREATE_SEPARATE_WOW_VDM))
         {
             BOOL vInJob{ FALSE };
-            if (IsProcessInJob(vProcessHandle, nullptr, &vInJob)
+            if (IsProcessInJob(vParentProcessHandle, nullptr, &vInJob)
                 && vInJob)
             {
                 aCreationFlags =
@@ -897,6 +913,35 @@ BOOL CreateProcessInternal(
         }
 
         //
+        // 获取 & 检查 Current directory
+        //
+
+        if (aCurrentDirectory)
+        {
+            vCurrentDirectory = (wchar_t*)RtlAllocateHeap(RtlProcessHeap(), 0, 
+                sizeof(wchar_t) * (MAX_PATH - 1));
+            if (nullptr == vCurrentDirectory)
+            {
+                vDosError = RtlNtStatusToDosError(STATUS_NO_MEMORY);
+                break;
+            }
+
+            // lpFilePart 在逆向的代码中是有传参数, 但是没有用到, 所以我直接给了 nullptr
+            UINT32 vFullPathLength = GetFullPathNameW(aCurrentDirectory, 
+                MAX_PATH - 1, vCurrentDirectory, nullptr);
+            if (!vFullPathLength)
+            {
+                vDosError = RtlGetLastWin32Error();
+                break;
+            }
+            else if (vFullPathLength >= MAX_PATH)
+            {
+                vDosError = ERROR_DIRECTORY;
+                break;
+            }
+        }
+        
+        //
         // 未完待续...
         //
 
@@ -904,5 +949,6 @@ BOOL CreateProcessInternal(
         break;
     }
 
+    RtlSetLastWin32Error(vDosError);
     return vResult;
 }

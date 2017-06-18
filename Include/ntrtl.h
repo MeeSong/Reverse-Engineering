@@ -115,11 +115,94 @@ __inline void* RtlSecureZeroMemory(void* aPtr, SIZE_T aCount)
 }
 
 //
+// RtlXXXHeap
+//
+
+using PRTL_HEAP_COMMIT_ROUTINE = NTSTATUS(*)(
+    void* Base,
+    void** CommitAddress,
+    SIZE_T* CommitSize);
+
+typedef struct _RTL_HEAP_PARAMETERS {
+    UINT32 Length;
+    SIZE_T SegmentReserve;
+    SIZE_T SegmentCommit;
+    SIZE_T DeCommitFreeBlockThreshold;
+    SIZE_T DeCommitTotalFreeThreshold;
+    SIZE_T MaximumAllocationSize;
+    SIZE_T VirtualMemoryThreshold;
+    SIZE_T InitialCommit;
+    SIZE_T InitialReserve;
+    PRTL_HEAP_COMMIT_ROUTINE CommitRoutine;
+    SIZE_T Reserved[2];
+} RTL_HEAP_PARAMETERS, *PRTL_HEAP_PARAMETERS;
+
+extern"C" HANDLE RtlCreateHeap(
+    UINT32 Flags,
+    void* HeapBase,
+    SIZE_T ReserveSize,
+    SIZE_T CommitSize,
+    void* Lock,
+    PRTL_HEAP_PARAMETERS Parameters
+);
+
+extern"C" HANDLE RtlDestroyHeap(
+    HANDLE HeapHandle
+);
+
+extern"C" void* RtlAllocateHeap(
+    HANDLE HeapHandle,
+    UINT32 Flags,
+    SIZE_T Size);
+
+
+extern"C" BOOLEAN RtlFreeHeap(
+    HANDLE HeapHandle,
+    UINT32 Flags,
+    void* BaseAddress
+);
+
+extern"C" SIZE_T RtlSizeHeap(
+    HANDLE HeapHandle,
+    UINT32 Flags,
+    void* BaseAddress
+);
+
+extern"C" NTSTATUS RtlZeroHeap(
+    HANDLE HeapHandle,
+    UINT32 Flags
+);
+
+extern"C" void RtlProtectHeap(
+    HANDLE HeapHandle,
+    BOOLEAN MakeReadOnly
+);
+
+#define RtlProcessHeap() (HANDLE(NtCurrentPeb()->ProcessHeap))
+
+extern"C" BOOLEAN RtlLockHeap(
+    HANDLE HeapHandle
+);
+
+extern"C" BOOLEAN RtlUnlockHeap(
+    HANDLE HeapHandle
+);
+
+extern"C" void* RtlReAllocateHeap(
+    HANDLE HeapHandle,
+    UINT32 Flags,
+    void* BaseAddress,
+    SIZE_T Size
+);
+
+//
 // RtlSetXXXXError
 //
 
-extern"C" UINT32 __stdcall RtlNtStatusToDosError(NTSTATUS aStatus);
-extern"C" void __stdcall RtlSetLastWin32Error(UINT32 aDosError);
+extern"C" DOSERROR __stdcall RtlNtStatusToDosError(NTSTATUS aStatus);
+extern"C" void __stdcall RtlSetLastWin32Error(DOSERROR aDosError);
+extern"C" NTSTATUS __stdcall RtlGetLastNtStatus(void);
+extern"C" DOSERROR __stdcall RtlGetLastWin32Error(void);
 
 //
 // RtlAcquirePrivileges

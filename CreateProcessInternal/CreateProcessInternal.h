@@ -73,12 +73,20 @@ extern"C" {
 
     void* __stdcall GetProcAddress(void* hModule, PCSTR lpProcName);
     void* __stdcall GetModuleHandleW(PCWSTR lpModuleName);
+
     UINT32 __stdcall GetLastError(void);
     void __stdcall SetLastError(UINT32 dwErrCode);
+
     BOOL __stdcall IsProcessInJob(
-            HANDLE ProcessHandle,
-            HANDLE JobHandle,
-            BOOL* Result);
+        HANDLE ProcessHandle,
+        HANDLE JobHandle,
+        BOOL* Result);
+
+    UINT32 __stdcall GetFullPathNameW(
+        PCWSTR lpFileName,
+        UINT32 nBufferLength,
+        PWSTR lpBuffer,
+        PWSTR * lpFilePart);
 }
 
 //////////////////////////////////////////////////////////////////////////

@@ -199,6 +199,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Include\csr.h" />
     <ClInclude Include="..\Include\doserror.h" />
     <ClInclude Include="..\Include\hresult.h" />
     <ClInclude Include="..\Include\ntbase.h" />
