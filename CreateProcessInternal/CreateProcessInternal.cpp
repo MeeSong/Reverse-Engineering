@@ -2,10 +2,8 @@
 
 #include <doserror.h>
 #include <ntstatus.h>
-#include <ntobapi.h>
 #include <ntpebteb.h>
 #include <ntrtl.h>
-#include <ntseapi.h>
 #include <ntdbg.h>
 #include <ntexapi.h>
 #include <ntmmapi.h>
@@ -176,6 +174,316 @@ void* BasepIsRealtimeAllowed(BOOLEAN aKeep, BOOLEAN aImpersonate)
     return vState;
 }
 
+NTSTATUS BasepConvertMitigationPolicyFlags(
+    PROC_THREAD_ATTRIBUTE* aAttribute, 
+    UINT64* aMitigationPolicyFlags)
+{
+    UINT64 vPolicy{ 0 };
+
+    if (aAttribute->Size == sizeof(UINT32))
+    {
+        vPolicy = *(UINT32*)(aAttribute->Value);
+    }
+    else if (aAttribute->Size == sizeof(UINT64))
+    {
+        vPolicy = *(UINT64*)(aAttribute->Value);
+    }
+    else
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    *aMitigationPolicyFlags = 0;
+
+    if (vPolicy & ~(PROCESS_CREATION_MITIGATION_POLICY_DEP_ENABLE
+        | PROCESS_CREATION_MITIGATION_POLICY_DEP_ATL_THUNK_ENABLE
+        | PROCESS_CREATION_MITIGATION_POLICY_SEHOP_ENABLE
+        | PROCESS_CREATION_MITIGATION_POLICY_FORCE_RELOCATE_IMAGES_MASK
+        | PROCESS_CREATION_MITIGATION_POLICY_HEAP_TERMINATE_MASK
+        | PROCESS_CREATION_MITIGATION_POLICY_BOTTOM_UP_ASLR_MASK
+        | PROCESS_CREATION_MITIGATION_POLICY_HIGH_ENTROPY_ASLR_MASK
+        | PROCESS_CREATION_MITIGATION_POLICY_STRICT_HANDLE_CHECKS_MASK
+        | PROCESS_CREATION_MITIGATION_POLICY_WIN32K_SYSTEM_CALL_DISABLE_MASK
+        | PROCESS_CREATION_MITIGATION_POLICY_EXTENSION_POINT_DISABLE_MASK
+        | PROCESS_CREATION_MITIGATION_POLICY_PROHIBIT_DYNAMIC_CODE_MASK
+        | PROCESS_CREATION_MITIGATION_POLICY_CONTROL_FLOW_GUARD_MASK
+        | PROCESS_CREATION_MITIGATION_POLICY_BLOCK_NON_MICROSOFT_BINARIES_MASK
+        // Windows 10 +
+        // | PROCESS_CREATION_MITIGATION_POLICY_FONT_DISABLE_MASK
+        // | PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_NO_REMOTE_MASK
+        // | PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_NO_LOW_LABEL_MASK
+        // | PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_MASK
+        ))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if ((vPolicy & (PROCESS_CREATION_MITIGATION_POLICY_DEP_ENABLE
+        | PROCESS_CREATION_MITIGATION_POLICY_DEP_ATL_THUNK_ENABLE))
+        == PROCESS_CREATION_MITIGATION_POLICY_DEP_ENABLE)
+    {
+        *aMitigationPolicyFlags |= 0x0000000000000001;
+    }
+    else if ((vPolicy & (PROCESS_CREATION_MITIGATION_POLICY_DEP_ENABLE
+        | PROCESS_CREATION_MITIGATION_POLICY_DEP_ATL_THUNK_ENABLE))
+        == PROCESS_CREATION_MITIGATION_POLICY_DEP_ATL_THUNK_ENABLE)
+    {
+        *aMitigationPolicyFlags |= 0x0000000000000002;
+    }
+    else if ((vPolicy & (PROCESS_CREATION_MITIGATION_POLICY_DEP_ENABLE
+        | PROCESS_CREATION_MITIGATION_POLICY_DEP_ATL_THUNK_ENABLE))
+        == (PROCESS_CREATION_MITIGATION_POLICY_DEP_ENABLE
+            | PROCESS_CREATION_MITIGATION_POLICY_DEP_ATL_THUNK_ENABLE))
+    {
+        *aMitigationPolicyFlags |= 0x0000000000000003;
+    }
+    else
+    {
+        *aMitigationPolicyFlags |= 0x0000000000000002;
+    }
+
+    if (vPolicy & PROCESS_CREATION_MITIGATION_POLICY_SEHOP_ENABLE)
+    {
+        *aMitigationPolicyFlags |= 0x0000000000000010;
+    }
+    else
+    {
+        *aMitigationPolicyFlags |= 0x0000000000000030;
+    }
+
+    if (vPolicy & PROCESS_CREATION_MITIGATION_POLICY_FORCE_RELOCATE_IMAGES_MASK)
+    {
+        UINT64 vForceRelocateImagesPolicy = (vPolicy & PROCESS_CREATION_MITIGATION_POLICY_FORCE_RELOCATE_IMAGES_MASK);
+        if (vForceRelocateImagesPolicy == PROCESS_CREATION_MITIGATION_POLICY_FORCE_RELOCATE_IMAGES_ALWAYS_ON)
+        {
+            *aMitigationPolicyFlags |= 0x0000000000000100;
+        }
+        else if (vForceRelocateImagesPolicy == PROCESS_CREATION_MITIGATION_POLICY_FORCE_RELOCATE_IMAGES_ALWAYS_OFF)
+        {
+            *aMitigationPolicyFlags |= 0x0000000000000200;
+        }
+        else if (vForceRelocateImagesPolicy == 
+            (PROCESS_CREATION_MITIGATION_POLICY_FORCE_RELOCATE_IMAGES_ALWAYS_ON
+                | PROCESS_CREATION_MITIGATION_POLICY_FORCE_RELOCATE_IMAGES_ALWAYS_OFF))
+        {
+            *aMitigationPolicyFlags |= 0x0000000000000300;
+        }
+        else // PROCESS_CREATION_MITIGATION_POLICY_FORCE_RELOCATE_IMAGES_DEFER
+        {
+            assert(FALSE);
+        }
+    }
+
+    if (vPolicy & PROCESS_CREATION_MITIGATION_POLICY_HEAP_TERMINATE_MASK)
+    {
+        UINT64 vHeapTerminatePolicy = (vPolicy & PROCESS_CREATION_MITIGATION_POLICY_HEAP_TERMINATE_MASK);
+        if (vHeapTerminatePolicy == PROCESS_CREATION_MITIGATION_POLICY_HEAP_TERMINATE_ALWAYS_ON)
+        {
+            *aMitigationPolicyFlags |= 0x0000000000001000;
+        }
+        else if (vHeapTerminatePolicy == PROCESS_CREATION_MITIGATION_POLICY_HEAP_TERMINATE_ALWAYS_OFF)
+        {
+            *aMitigationPolicyFlags |= 0x0000000000002000;
+        }
+        else if (vHeapTerminatePolicy == 
+            (PROCESS_CREATION_MITIGATION_POLICY_HEAP_TERMINATE_ALWAYS_ON
+                | PROCESS_CREATION_MITIGATION_POLICY_HEAP_TERMINATE_ALWAYS_OFF))
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+        else // PROCESS_CREATION_MITIGATION_POLICY_HEAP_TERMINATE_DEFER
+        {
+            assert(FALSE);
+        }
+    }
+
+    if (vPolicy & PROCESS_CREATION_MITIGATION_POLICY_BOTTOM_UP_ASLR_MASK)
+    {
+        UINT64 vBottomUpASLRPolicy = (vPolicy & PROCESS_CREATION_MITIGATION_POLICY_BOTTOM_UP_ASLR_MASK);
+        if (vBottomUpASLRPolicy == PROCESS_CREATION_MITIGATION_POLICY_BOTTOM_UP_ASLR_ALWAYS_ON)
+        {
+            *aMitigationPolicyFlags |= 0x0000000000010000;
+        }
+        else if (vBottomUpASLRPolicy == PROCESS_CREATION_MITIGATION_POLICY_BOTTOM_UP_ASLR_ALWAYS_OFF)
+        {
+            *aMitigationPolicyFlags |= 0x0000000000020000;
+        }
+        else if (vBottomUpASLRPolicy == 
+            (PROCESS_CREATION_MITIGATION_POLICY_BOTTOM_UP_ASLR_ALWAYS_ON
+                | PROCESS_CREATION_MITIGATION_POLICY_BOTTOM_UP_ASLR_ALWAYS_OFF))
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+        else // PROCESS_CREATION_MITIGATION_POLICY_BOTTOM_UP_ASLR_DEFER
+        {
+            assert(FALSE);
+        }
+    }
+
+    if (vPolicy & PROCESS_CREATION_MITIGATION_POLICY_HIGH_ENTROPY_ASLR_MASK)
+    {
+        UINT64 vHighEntropyASLRPolicy = (vPolicy & PROCESS_CREATION_MITIGATION_POLICY_HIGH_ENTROPY_ASLR_MASK);
+        if (vHighEntropyASLRPolicy == PROCESS_CREATION_MITIGATION_POLICY_HIGH_ENTROPY_ASLR_ALWAYS_ON)
+        {
+            *aMitigationPolicyFlags |= 0x0000000000100000;
+        }
+        else if (vHighEntropyASLRPolicy == PROCESS_CREATION_MITIGATION_POLICY_HIGH_ENTROPY_ASLR_ALWAYS_OFF)
+        {
+            *aMitigationPolicyFlags |= 0x0000000000200000;
+        }
+        else if (vHighEntropyASLRPolicy == 
+            (PROCESS_CREATION_MITIGATION_POLICY_HIGH_ENTROPY_ASLR_ALWAYS_ON
+                | PROCESS_CREATION_MITIGATION_POLICY_HIGH_ENTROPY_ASLR_ALWAYS_OFF))
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+        else // PROCESS_CREATION_MITIGATION_POLICY_HIGH_ENTROPY_ASLR_DEFER
+        {
+            assert(FALSE);
+        }
+    }
+
+    if (vPolicy & PROCESS_CREATION_MITIGATION_POLICY_STRICT_HANDLE_CHECKS_MASK)
+    {
+        UINT64 vStrictHandleChecksPolicy = (vPolicy & PROCESS_CREATION_MITIGATION_POLICY_STRICT_HANDLE_CHECKS_MASK);
+        if (vStrictHandleChecksPolicy == PROCESS_CREATION_MITIGATION_POLICY_STRICT_HANDLE_CHECKS_ALWAYS_ON)
+        {
+            *aMitigationPolicyFlags |= 0x0000000001000000;
+        }
+        else if (vStrictHandleChecksPolicy == PROCESS_CREATION_MITIGATION_POLICY_STRICT_HANDLE_CHECKS_ALWAYS_OFF)
+        {
+            *aMitigationPolicyFlags |= 0x0000000002000000;
+        }
+        else if (vStrictHandleChecksPolicy == 
+            (PROCESS_CREATION_MITIGATION_POLICY_STRICT_HANDLE_CHECKS_ALWAYS_ON
+                | PROCESS_CREATION_MITIGATION_POLICY_STRICT_HANDLE_CHECKS_ALWAYS_OFF))
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+        else // PROCESS_CREATION_MITIGATION_POLICY_STRICT_HANDLE_CHECKS_DEFER
+        {
+            assert(FALSE);
+        }
+    }
+
+    if (vPolicy & PROCESS_CREATION_MITIGATION_POLICY_WIN32K_SYSTEM_CALL_DISABLE_MASK)
+    {
+        UINT64 vWin32kSystemCallDisablePolicy = (vPolicy & PROCESS_CREATION_MITIGATION_POLICY_WIN32K_SYSTEM_CALL_DISABLE_MASK);
+        if (vWin32kSystemCallDisablePolicy == PROCESS_CREATION_MITIGATION_POLICY_WIN32K_SYSTEM_CALL_DISABLE_ALWAYS_ON)
+        {
+            *aMitigationPolicyFlags |= 0x0000000010000000;
+        }
+        else if (vWin32kSystemCallDisablePolicy == PROCESS_CREATION_MITIGATION_POLICY_WIN32K_SYSTEM_CALL_DISABLE_ALWAYS_OFF)
+        {
+            *aMitigationPolicyFlags |= 0x0000000020000000;
+        }
+        else if (vWin32kSystemCallDisablePolicy == 
+            (PROCESS_CREATION_MITIGATION_POLICY_WIN32K_SYSTEM_CALL_DISABLE_ALWAYS_ON
+                | PROCESS_CREATION_MITIGATION_POLICY_WIN32K_SYSTEM_CALL_DISABLE_ALWAYS_OFF))
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+        else // PROCESS_CREATION_MITIGATION_POLICY_WIN32K_SYSTEM_CALL_DISABLE_DEFER
+        {
+            assert(FALSE);
+        }
+    }
+
+    if (vPolicy & PROCESS_CREATION_MITIGATION_POLICY_EXTENSION_POINT_DISABLE_MASK)
+    {
+        UINT64 vExtensionPointDisablePolicy = (vPolicy & PROCESS_CREATION_MITIGATION_POLICY_EXTENSION_POINT_DISABLE_MASK);
+        if (vExtensionPointDisablePolicy == PROCESS_CREATION_MITIGATION_POLICY_EXTENSION_POINT_DISABLE_ALWAYS_ON)
+        {
+            *aMitigationPolicyFlags |= 0x0000000100000000;
+        }
+        else if (vExtensionPointDisablePolicy == PROCESS_CREATION_MITIGATION_POLICY_EXTENSION_POINT_DISABLE_ALWAYS_OFF)
+        {
+            *aMitigationPolicyFlags |= 0x0000000200000000;
+        }
+        else if (vExtensionPointDisablePolicy == 
+            (PROCESS_CREATION_MITIGATION_POLICY_EXTENSION_POINT_DISABLE_ALWAYS_ON
+                | PROCESS_CREATION_MITIGATION_POLICY_EXTENSION_POINT_DISABLE_ALWAYS_OFF))
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+        else // PROCESS_CREATION_MITIGATION_POLICY_EXTENSION_POINT_DISABLE_DEFER
+        {
+            assert(FALSE);
+        }
+    }
+
+    if (vPolicy & PROCESS_CREATION_MITIGATION_POLICY_PROHIBIT_DYNAMIC_CODE_MASK)
+    {
+        UINT64 vProhibitDynamicCodePolicy = (vPolicy & PROCESS_CREATION_MITIGATION_POLICY_PROHIBIT_DYNAMIC_CODE_MASK);
+        if (vProhibitDynamicCodePolicy == PROCESS_CREATION_MITIGATION_POLICY_PROHIBIT_DYNAMIC_CODE_ALWAYS_ON)
+        {
+            *aMitigationPolicyFlags |= 0x0000001000000000;
+        }
+        else if (vProhibitDynamicCodePolicy == PROCESS_CREATION_MITIGATION_POLICY_PROHIBIT_DYNAMIC_CODE_ALWAYS_OFF)
+        {
+            *aMitigationPolicyFlags |= 0x0000002000000000;
+        }
+        else if (vProhibitDynamicCodePolicy == 
+            (PROCESS_CREATION_MITIGATION_POLICY_PROHIBIT_DYNAMIC_CODE_ALWAYS_ON
+                | PROCESS_CREATION_MITIGATION_POLICY_PROHIBIT_DYNAMIC_CODE_ALWAYS_OFF))
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+        else // PROCESS_CREATION_MITIGATION_POLICY_PROHIBIT_DYNAMIC_CODE_DEFER
+        {
+            assert(FALSE);
+        }
+    }
+
+    if (vPolicy & PROCESS_CREATION_MITIGATION_POLICY_CONTROL_FLOW_GUARD_MASK)
+    {
+        UINT64 vControlFlowGuardPolicy = (vPolicy & PROCESS_CREATION_MITIGATION_POLICY_CONTROL_FLOW_GUARD_MASK);
+        if (vControlFlowGuardPolicy == PROCESS_CREATION_MITIGATION_POLICY_CONTROL_FLOW_GUARD_ALWAYS_ON)
+        {
+            *aMitigationPolicyFlags |= 0x0000010000000000;
+        }
+        else if (vControlFlowGuardPolicy == PROCESS_CREATION_MITIGATION_POLICY_CONTROL_FLOW_GUARD_ALWAYS_OFF)
+        {
+            *aMitigationPolicyFlags |= 0x0000020000000000;
+        }
+        else if (vControlFlowGuardPolicy == 
+            (PROCESS_CREATION_MITIGATION_POLICY_CONTROL_FLOW_GUARD_ALWAYS_ON 
+                | PROCESS_CREATION_MITIGATION_POLICY_CONTROL_FLOW_GUARD_ALWAYS_OFF))
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+        else // PROCESS_CREATION_MITIGATION_POLICY_CONTROL_FLOW_GUARD_DEFER
+        {
+            assert(FALSE);
+        }
+    }
+
+    if (vPolicy & PROCESS_CREATION_MITIGATION_POLICY_BLOCK_NON_MICROSOFT_BINARIES_MASK)
+    {
+        UINT64 vBlockNonMicrosoftBinariesPolicy = (vPolicy & PROCESS_CREATION_MITIGATION_POLICY_BLOCK_NON_MICROSOFT_BINARIES_MASK);
+        if (vBlockNonMicrosoftBinariesPolicy == PROCESS_CREATION_MITIGATION_POLICY_BLOCK_NON_MICROSOFT_BINARIES_ALWAYS_ON)
+        {
+            *aMitigationPolicyFlags |= 0x0000100000000000;
+        }
+        else if (vBlockNonMicrosoftBinariesPolicy == PROCESS_CREATION_MITIGATION_POLICY_BLOCK_NON_MICROSOFT_BINARIES_ALWAYS_OFF)
+        {
+            *aMitigationPolicyFlags |= 0x0000200000000000;
+        }
+        else if (vBlockNonMicrosoftBinariesPolicy == 
+            (PROCESS_CREATION_MITIGATION_POLICY_BLOCK_NON_MICROSOFT_BINARIES_ALWAYS_ON
+                | PROCESS_CREATION_MITIGATION_POLICY_BLOCK_NON_MICROSOFT_BINARIES_ALWAYS_OFF))
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+        else // PROCESS_CREATION_MITIGATION_POLICY_BLOCK_NON_MICROSOFT_BINARIES_DEFER
+        {
+            assert(FALSE);
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
+
 // Windows 10 的版本, 这个函数多了几个参数...
 // 应该是多了几个 Attribute 的处理
 NTSTATUS BasepConvertWin32AttributeList(
@@ -232,7 +540,7 @@ NTSTATUS BasepConvertWin32AttributeList(
                 break;
             }
 
-            bool vInsertPsAttribute = true;
+            bool vIsNormalAttribute = true;
             UINT_PTR vPsAttribute{ 0 };
 
             switch (vAttributeValue)
@@ -261,7 +569,7 @@ NTSTATUS BasepConvertWin32AttributeList(
                 ++vPsAttributesCount;
 
                 *aParentProcessHandle = *(HANDLE*)(vAttribute->Value);
-                vInsertPsAttribute = false;
+                vIsNormalAttribute = false;
                 break;
             }
 
@@ -280,7 +588,7 @@ NTSTATUS BasepConvertWin32AttributeList(
                     break;
                 }
 
-                vInsertPsAttribute = false;
+                vIsNormalAttribute = false;
                 break;
             }
 
@@ -352,17 +660,16 @@ NTSTATUS BasepConvertWin32AttributeList(
             {
                 assert(!aIsThread && aMitigationPolicyFlags);
 
-                if ((vAttribute->Size - 4) & SIZE_T(~(4)))
+                if ((vAttribute->Size - sizeof(UINT32)) & SIZE_T(~(sizeof(UINT32))))
                 {
                     // Only UINT32 or UINT64
                     vStatus = STATUS_INVALID_PARAMETER;
                     break;
                 }
 
-                // TODO
-                //vStatus = BasepConvertMitigationPolicyFlags(
-                //    vAttribute, aMitigationPolicyFlags, vStatus, vInsertPsAttribute);
-                if (!NT_SUCCESS(vStatus))
+                vStatus = BasepConvertMitigationPolicyFlags(
+                    vAttribute, aMitigationPolicyFlags);
+                if (NT_WARNING(vStatus))
                 {
                     break;
                 }
@@ -373,7 +680,7 @@ NTSTATUS BasepConvertWin32AttributeList(
                 aPsAttributeList->Attributes[vPsAttributesCount].ReturnLength = nullptr;
 
                 ++vPsAttributesCount;
-                vInsertPsAttribute = false;
+                vIsNormalAttribute = false;
                 break;
             }
 
@@ -398,7 +705,7 @@ NTSTATUS BasepConvertWin32AttributeList(
                     aPackageFullName->Length -= sizeof(wchar_t);
                 }
 
-                vInsertPsAttribute = false;
+                vIsNormalAttribute = false;
                 break;
             }
             
@@ -412,7 +719,7 @@ NTSTATUS BasepConvertWin32AttributeList(
                 }
 
                 *aSecurityCapabilities = (SECURITY_CAPABILITIES*)(vAttribute->Value);
-                vInsertPsAttribute = false;
+                vIsNormalAttribute = false;
                 break;
             }
 
@@ -427,7 +734,7 @@ NTSTATUS BasepConvertWin32AttributeList(
                 }
 
                 *aConsoleHandle = HANDLE(vAttribute->Value);
-                vInsertPsAttribute = false;
+                vIsNormalAttribute = false;
                 break;
             }
 
@@ -538,7 +845,7 @@ NTSTATUS BasepConvertWin32AttributeList(
                 aPsAttributeList->Attributes[vPsAttributesCount].Value = vProtectionLevel.Level;
                 aPsAttributeList->Attributes[vPsAttributesCount].ReturnLength = nullptr;
 
-                vInsertPsAttribute = false;
+                vIsNormalAttribute = false;
                 break;
             }
 
@@ -549,7 +856,7 @@ NTSTATUS BasepConvertWin32AttributeList(
                 break;
             }
 
-            if (vInsertPsAttribute)
+            if (vIsNormalAttribute)
             {
                 assert(vPsAttributesCount < aMaxPsAttributeCount);
 
@@ -605,7 +912,7 @@ NTSTATUS BasepCreateLowBox(
     SECURITY_CAPABILITIES* aSecurityCapabilities,
     HANDLE* aLowBoxToken)
 {
-
+    return STATUS_UNSUCCESSFUL;
 }
 
 BOOL CreateProcessInternal(
@@ -1087,6 +1394,7 @@ BOOL CreateProcessInternal(
 
             if (vSecurityCapabilities)
             {
+                // 创建 LowBox 完整性等级的Token
                 vStatus = BasepCreateLowBox(aToken, vSecurityCapabilities, &vLowBoxToken);
                 if (!NT_SUCCESS(vStatus))
                 {
@@ -1121,7 +1429,9 @@ BOOL CreateProcessInternal(
                     vEnvironment = vAppXEnvironmentExtension;
                 }
             }
-            
+
+            // 检查目录正确性
+
             if (vCurrentDirectory)
             {
                 UINT32 vDirAttributes = GetFileAttributesW(vCurrentDirectory);

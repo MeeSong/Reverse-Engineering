@@ -28,7 +28,7 @@ enum FILE_ATTRIBUTE : UINT32
     FILE_ATTRIBUTE_NO_SCRUB_DATA = 0x00020000,
     FILE_ATTRIBUTE_EA = 0x00040000,
 
-    INVALID_FILE_ATTRIBUTES = -1,
+    INVALID_FILE_ATTRIBUTES = FILE_ATTRIBUTE(-1),
 };
 
 //////////////////////////////////////////////////////////////////////////
