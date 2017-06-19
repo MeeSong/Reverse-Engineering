@@ -3,16 +3,39 @@
 
 //////////////////////////////////////////////////////////////////////////
 
+//
+// Base
+//
+
 using fun$BaseFormatObjectAttributes = NTSTATUS(__stdcall *)(
     OBJECT_ATTRIBUTES* aLocalObjectAttributes,
     SECURITY_ATTRIBUTES* aSecurityAttributes,
     UNICODE_STRING* aObjectName,
     OBJECT_ATTRIBUTES** aObjectAttributes);
 
-
 using fun$BaseIsDosApplication = UINT32(__stdcall *)(
     UNICODE_STRING* PathName,
     NTSTATUS Status);
+
+using fun$BaseGetNamedObjectDirectory = NTSTATUS(__stdcall *)(
+    HANDLE* aObjectDirectory);
+
+//
+// Base private
+//
+
+using fun$BasepAppXExtension = NTSTATUS(__stdcall *)(
+    HANDLE aToken,
+    UNICODE_STRING* aPackageFullName,
+    SECURITY_CAPABILITIES *aSecurityCapabilities,
+    void* aEnvironment,
+    void** aAppXContext,    // TODO: Unknown Struct
+    void** aAppXEnvironment);
+
+using fun$BasepAppContainerEnvironmentExtension = NTSTATUS(__stdcall *)(
+    PSID aAppContainerSid,
+    void* aEnvironment,
+    void** aAppXEnvironmentExtension);
 
 using fun$BasepProcessInvalidImage = BOOL(__stdcall *)(
     NTSTATUS aStatus,
@@ -35,16 +58,17 @@ using fun$BasepProcessInvalidImage = BOOL(__stdcall *)(
     UINT32 *aVdmUndoStates,
     UINT32 *aVdmBinaryType,
     BOOL *aVdmValid,
-    HANDLE *vVdmWaitHandle);
+    HANDLE *aVdmWaitHandle);
 
 using fun$BasepCheckWinSaferRestrictions = NTSTATUS(__stdcall *)(
     HANDLE aToken,
     PCWSTR aApplicationName,
     HANDLE aFile,
-    UNICODE_STRING *aUnknown);
+    UNICODE_STRING *aPackageFullName);
 
-using fun$BaseGetNamedObjectDirectory = NTSTATUS(__stdcall *)(
-    HANDLE* aObjectDirectory);
+//
+// Nt XXX
+//
 
 using fun$RaiseInvalid16BitExeError = void(__stdcall *)(
     UNICODE_STRING* aExePath);
@@ -88,6 +112,8 @@ extern"C" {
         UINT32 nBufferLength,
         PWSTR lpBuffer,
         PWSTR * lpFilePart);
+
+    UINT32 __stdcall GetFileAttributesW(PCWSTR lpFileName);
 }
 
 //////////////////////////////////////////////////////////////////////////

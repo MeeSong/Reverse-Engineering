@@ -240,3 +240,9 @@ extern"C" NTSTATUS RtlCreateEnvironmentEx(
     void** Environment,
     UINT32 Flags);
 extern"C" NTSTATUS RtlDestroyEnvironment(void* Environment);
+
+//
+// RtlXXXXString
+//
+
+extern"C" void RtlFreeUnicodeString(PUNICODE_STRING UnicodeString);

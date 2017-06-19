@@ -85,7 +85,7 @@ enum : BOOL
 #ifdef DEBUG
 #define assert(expression) (void)( (!!(expression)) || (__int2c(), FALSE) )
 #else
-#define assert(expression) ((void)0)
+#define assert(expression) (void)( (!!(expression)) || (FALSE) )
 #endif // DEBUG
 
 
@@ -219,16 +219,6 @@ typedef struct _KSYSTEM_TIME
     INT32 High1Time;
     INT32 High2Time;
 } KSYSTEM_TIME, *PKSYSTEM_TIME;
-
-typedef struct _OBJECT_ATTRIBUTES {
-    UINT32 Length;
-    HANDLE RootDirectory;
-    PUNICODE_STRING ObjectName;
-    UINT32 Attributes;
-    void* SecurityDescriptor;
-    void* SecurityQualityOfService;
-} OBJECT_ATTRIBUTES;
-typedef OBJECT_ATTRIBUTES *POBJECT_ATTRIBUTES;
 
 typedef struct _IO_STATUS_BLOCK {
     union {

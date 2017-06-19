@@ -110,7 +110,7 @@ typedef struct _WOW64_PROCESS
 // NtQueryInformationProcess
 //
 
-typedef enum _PROCESSINFOCLASS : UINT32
+enum PROCESSINFOCLASS : UINT32
 {
     ProcessBasicInformation, // q: PROCESS_BASIC_INFORMATION, PROCESS_EXTENDED_BASIC_INFORMATION
     ProcessQuotaLimits, // qs: QUOTA_LIMITS, QUOTA_LIMITS_EX
@@ -196,7 +196,7 @@ typedef enum _PROCESSINFOCLASS : UINT32
     ProcessWakeInformation, // PROCESS_WAKE_INFORMATION
     ProcessEnergyTrackingState, // PROCESS_ENERGY_TRACKING_STATE
     MaxProcessInfoClass
-} PROCESSINFOCLASS;
+};
 
 extern"C" NTSTATUS NtQueryInformationProcess(
     HANDLE ProcessHandle,
@@ -270,6 +270,18 @@ extern"C" NTSTATUS NtQueryInformationThread(
     void* ThreadInformation,
     UINT32 ThreadInformationLength,
     UINT32* ReturnLength
+);
+
+//////////////////////////////////////////////////////////////////////////
+
+extern"C" NTSTATUS NtSuspendThread(
+    HANDLE ThreadHandle,
+    UINT32* PreviousSuspendCount
+);
+
+extern"C" NTSTATUS NtResumeThread(
+    HANDLE ThreadHandle,
+    UINT32* PreviousSuspendCount
 );
 
 //////////////////////////////////////////////////////////////////////////
@@ -375,6 +387,9 @@ enum PROC_THREAD_ATTRIBUTE_NUM : UINT32
     ProcThreadAttributeSecurityCapabilities = 9,
     ProcThreadAttributeConsoleReference = 10,
     ProcThreadAttributeProtectionLevel = 11,
+
+    ProcThreadAttributeMaxWin8 = 12,
+
     ProcThreadAttributeUnknown0 = 12,
     ProcThreadAttributeJobList = 13,
     ProcThreadAttributeChildProcessPolicy = 14,
@@ -794,3 +809,17 @@ typedef struct _PS_CREATE_INFO
     };
 }PS_CREATE_INFO, *PPS_CREATE_INFO;
 static_assert(sizeof(PS_CREATE_INFO) == 0x58, "PS_CREATE_INFO size is wrong!");
+
+extern"C" NTSTATUS NtCreateUserProcess(
+    HANDLE* ProcessHandle,
+    HANDLE* ThreadHandle,
+    ACCESS_MASK ProcessDesiredAccess,
+    ACCESS_MASK ThreadDesiredAccess,
+    POBJECT_ATTRIBUTES ProcessObjectAttributes,
+    POBJECT_ATTRIBUTES ThreadObjectAttributes,
+    UINT32 ProcessFlags, // PROCESS_CREATE_FLAGS_*
+    UINT32 ThreadFlags, // THREAD_CREATE_FLAGS_*
+    void* ProcessParameters, // PRTL_USER_PROCESS_PARAMETERS
+    PPS_CREATE_INFO CreateInfo,
+    PPS_ATTRIBUTE_LIST AttributeList
+);

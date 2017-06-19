@@ -2,6 +2,7 @@
 
 #include <doserror.h>
 #include <ntstatus.h>
+#include <ntobapi.h>
 #include <ntpebteb.h>
 #include <ntrtl.h>
 #include <ntseapi.h>
@@ -19,9 +20,12 @@ ptrdiff_t BaseStaticServerData{ 0 };
 
 fun$BaseFormatObjectAttributes      BaseFormatObjectAttributes{ nullptr }; 
 fun$BaseIsDosApplication            BaseIsDosApplication{ nullptr };
+fun$BaseGetNamedObjectDirectory     BaseGetNamedObjectDirectory{ nullptr };
+
 fun$BasepProcessInvalidImage        BasepProcessInvalidImage{ nullptr };
 fun$BasepCheckWinSaferRestrictions  BasepCheckWinSaferRestrictions{ nullptr };
-fun$BaseGetNamedObjectDirectory     BaseGetNamedObjectDirectory{ nullptr };
+fun$BasepAppXExtension              BasepAppXExtension{ nullptr };
+fun$BasepAppContainerEnvironmentExtension BasepAppContainerEnvironmentExtension{ nullptr };
 
 fun$RaiseInvalid16BitExeError       RaiseInvalid16BitExeError{ nullptr };
 
@@ -53,6 +57,10 @@ void InitializeBaseData()
 
 inline BOOLEAN IsDefaultSeparateVDM()
 {
+    // Win10 Used for real machine debugging
+    if (NtCurrentPeb()->OSMajorVersion == 10)
+        return (*(BOOLEAN*)(BaseStaticServerData + 0x958));
+
     return (*(BOOLEAN*)(BaseStaticServerData + 0x744));
 }
 
@@ -82,6 +90,13 @@ DOSERROR InitializeDependentFunction()
         {
             break;
         }
+        
+        BaseGetNamedObjectDirectory = (fun$BaseGetNamedObjectDirectory)GetProcAddress(
+            GetModuleHandleW(L"Kernel32.dll"), "BaseGetNamedObjectDirectory");
+        if (nullptr == BaseGetNamedObjectDirectory)
+        {
+            break;
+        }
 
         BasepProcessInvalidImage = (fun$BasepProcessInvalidImage)GetProcAddress(
             GetModuleHandleW(L"Kernel32.dll"), "BasepProcessInvalidImage");
@@ -96,10 +111,17 @@ DOSERROR InitializeDependentFunction()
         {
             break;
         }
-        
-        BaseGetNamedObjectDirectory = (fun$BaseGetNamedObjectDirectory)GetProcAddress(
-            GetModuleHandleW(L"Kernel32.dll"), "BaseGetNamedObjectDirectory");
-        if (nullptr == BaseGetNamedObjectDirectory)
+
+        BasepAppXExtension = (fun$BasepAppXExtension)GetProcAddress(
+            GetModuleHandleW(L"Kernel32.dll"), "BasepAppXExtension");
+        if (nullptr == BasepAppXExtension)
+        {
+            break;
+        }
+
+        BasepAppContainerEnvironmentExtension = (fun$BasepAppContainerEnvironmentExtension)GetProcAddress(
+            GetModuleHandleW(L"Kernel32.dll"), "BasepAppContainerEnvironmentExtension");
+        if (nullptr == BasepAppContainerEnvironmentExtension)
         {
             break;
         }
@@ -181,7 +203,7 @@ NTSTATUS BasepConvertWin32AttributeList(
     assert(aMaxPsAttributeCount - *aPsAttrubutesCount >= 8);
 
     if ((aThreadAttributeList->LastAttribute > aThreadAttributeList->AttributeCount)
-        || (aThreadAttributeList->LastAttribute > ProcThreadAttributeMax))
+        || (aThreadAttributeList->LastAttribute > ProcThreadAttributeMaxWin8))
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -578,6 +600,14 @@ NTSTATUS BasepConvertWin32AttributeList(
     return vStatus;
 }
 
+NTSTATUS BasepCreateLowBox(
+    HANDLE aToken,
+    SECURITY_CAPABILITIES* aSecurityCapabilities,
+    HANDLE* aLowBoxToken)
+{
+
+}
+
 BOOL CreateProcessInternal(
     HANDLE aToken,
     PCWSTR aApplicationName,
@@ -606,6 +636,7 @@ BOOL CreateProcessInternal(
     }
 
     wchar_t *vCurrentDirectory{ nullptr };
+    void *vEnvironment{ aEnvironment };
 
     UINT8 vPriorityClass{ PROCESS_PRIORITY_CLASS_INVALID };
     UINT32 vProcessCreateFlags{};
@@ -617,6 +648,10 @@ BOOL CreateProcessInternal(
     BOOLEAN vHasHandleList{ FALSE };
     UINT64 vMitigationPolicyFlags{ 0 };
 
+    BOOLEAN vTestedAppX{ false };
+    void* vAppXEnvironment{ nullptr };
+    void* vAppXContext{ nullptr };
+
     HANDLE vDebugObject{ nullptr };
     BOOL vErrorMode{ TRUE };
 
@@ -627,6 +662,7 @@ BOOL CreateProcessInternal(
     HANDLE vThreadHandle{};
     HANDLE vExeFileHandle{};
     HANDLE vExeSectionHandle{};
+    HANDLE vLowBoxToken{};
     
     CLIENT_ID vClientId{};
     SECTION_IMAGE_INFORMATION vImageInfo{};
@@ -807,14 +843,6 @@ BOOL CreateProcessInternal(
             ++vPsAttributesCount;
         }
 
-        if (aToken)
-        {
-            vPsAttributeList->Attributes[vPsAttributesCount].Attribute = PS_ATTRIBUTE_TOKEN;
-            vPsAttributeList->Attributes[vPsAttributesCount].Size = sizeof(aToken);
-            vPsAttributeList->Attributes[vPsAttributesCount].ValuePtr = aToken;
-            ++vPsAttributesCount;
-        }
-
         RtlSecureZeroMemory(aProcessInformation, sizeof(*aProcessInformation));
 
         //
@@ -867,15 +895,15 @@ BOOL CreateProcessInternal(
                     &vMitigationPolicyFlags,
                     vPsAttributeList,
                     &vPsAttributesCount,
-                    15);
+                    ProcThreadAttributeMaxWin8 + 3); // 3 is vPsAttributeList->Attributes[0~2]
 
                 if (!NT_SUCCESS(vStatus))
                 {
                     vDosError = RtlNtStatusToDosError(vStatus);
                     break;
                 }
-
-                assert(vPsAttributesCount <= 15);
+                
+                assert(vPsAttributesCount <= (ProcThreadAttributeMaxWin8 + 3));
 
                 if ((vStartupInfo.lpAttributeList->PresentFlags & (1 << ProcThreadAttributeConsoleReference))
                     && (vParentProcessHandle || vSecurityCapabilities))
@@ -890,16 +918,11 @@ BOOL CreateProcessInternal(
                 }
             }
         }
-
-        if (!vParentProcessHandle)
-        {
-            vParentProcessHandle = GetCurrentProcess();
-        }
         
         if (!(aCreationFlags & CREATE_SEPARATE_WOW_VDM))
         {
             BOOL vInJob{ FALSE };
-            if (IsProcessInJob(vParentProcessHandle, nullptr, &vInJob)
+            if (IsProcessInJob(vParentProcessHandle ? vParentProcessHandle : GetCurrentProcess(), nullptr, &vInJob)
                 && vInJob)
             {
                 aCreationFlags =
@@ -964,12 +987,168 @@ BOOL CreateProcessInternal(
             vDosError = RtlNtStatusToDosError(vStatus);
             break;
         }
-        
-        //
-        // 未完待续...
-        //
 
-        vResult = TRUE;
+        wchar_t* vNameBuffer{ nullptr };
+        wchar_t* vFullPathBuffer{ nullptr };
+        wchar_t* vQuotedCmdLine{ nullptr };
+
+        UNICODE_STRING vNtName{};
+
+        for (;;)
+        {
+            BOOL v157{ TRUE };
+
+            if (!aInheritHandles || vHasHandleList)
+            {
+                v157 = FALSE;
+            }
+
+            if (vNameBuffer)
+            {
+                RtlFreeHeap(RtlProcessHeap(), 0, vNameBuffer);
+                vNameBuffer = nullptr;
+            }
+
+            if (vFullPathBuffer)
+            {
+                RtlFreeHeap(RtlProcessHeap(), 0, vFullPathBuffer);
+                vFullPathBuffer = nullptr;
+            }
+
+            if (vQuotedCmdLine)
+            {
+                RtlFreeHeap(RtlProcessHeap(), 0, vQuotedCmdLine);
+                vQuotedCmdLine = nullptr;
+            }
+
+            RtlFreeUnicodeString(&vNtName);
+
+            if (vExeFileHandle)
+            {
+                assert(NT_SUCCESS(NtClose(vExeFileHandle)));
+                vExeFileHandle = nullptr;
+            }
+
+            if (vLowBoxToken)
+            {
+                assert(NT_SUCCESS(NtClose(vLowBoxToken)));
+                vLowBoxToken = nullptr;
+            }
+
+            if (vAppXEnvironment)
+            {
+                assert(NT_SUCCESS(RtlDestroyEnvironment(vAppXEnvironment)));
+                vAppXEnvironment = nullptr;
+            }
+
+            //
+            // AppX 或者称为 PackageProcess ?
+            //
+
+            if (!vTestedAppX
+                && !vParentProcessHandle
+                && (vPackageFullName.Length || NtCurrentPeb()->IsPackagedProcess))
+            {
+                vTestedAppX = true;
+
+                vStatus = BasepAppXExtension(
+                    aToken, 
+                    &vPackageFullName, 
+                    vSecurityCapabilities, 
+                    aEnvironment,
+                    &vAppXContext,
+                    &vAppXEnvironment);
+                if (!NT_SUCCESS(vStatus))
+                {
+                    vDosError = RtlNtStatusToDosError(vStatus);
+                    break;
+                }
+
+                if (vAppXEnvironment)
+                {
+                    vEnvironment = vAppXEnvironment;
+                }
+
+                if (vAppXContext)
+                {
+                    // TODO
+                }
+                else
+                {
+                    vPackageFullName.Buffer = nullptr;
+                    vPackageFullName.Length = 0;
+                    vPackageFullName.MaximumLength = 0;
+                }
+            }
+
+            //
+            // AppContainer , IE 经常用..
+            //
+
+            if (vSecurityCapabilities)
+            {
+                vStatus = BasepCreateLowBox(aToken, vSecurityCapabilities, &vLowBoxToken);
+                if (!NT_SUCCESS(vStatus))
+                {
+                    vDosError = RtlNtStatusToDosError(vStatus);
+                    break;
+                }
+
+                void *vAppXEnvironmentExtension{ nullptr };
+
+                vStatus = BasepAppContainerEnvironmentExtension(
+                    vSecurityCapabilities->AppContainerSid, aEnvironment, &vAppXEnvironmentExtension);
+                if (!NT_SUCCESS(vStatus))
+                {
+                    vDosError = RtlNtStatusToDosError(vStatus);
+                    break;
+                }
+
+                if (vLowBoxToken)
+                {
+                    aToken = vLowBoxToken;
+                }
+
+                if (vAppXEnvironmentExtension)
+                {
+                    if (vAppXEnvironment)
+                    {
+                        assert(vEnvironment == vAppXEnvironment);
+                        assert(NT_SUCCESS(RtlDestroyEnvironment(vAppXEnvironment)));
+                    }
+
+                    vAppXEnvironment = vAppXEnvironmentExtension;
+                    vEnvironment = vAppXEnvironmentExtension;
+                }
+            }
+            
+            if (vCurrentDirectory)
+            {
+                UINT32 vDirAttributes = GetFileAttributesW(vCurrentDirectory);
+                if ((vDirAttributes == INVALID_FILE_ATTRIBUTES)
+                    || !(vDirAttributes & FILE_ATTRIBUTE_DIRECTORY))
+                {
+                    vDosError = ERROR_DIRECTORY;
+                    break;
+                }
+            }
+
+            if (aToken)
+            {
+                vPsAttributeList->Attributes[vPsAttributesCount].Attribute = PS_ATTRIBUTE_TOKEN;
+                vPsAttributeList->Attributes[vPsAttributesCount].Size = sizeof(aToken);
+                vPsAttributeList->Attributes[vPsAttributesCount].ValuePtr = aToken;
+                ++vPsAttributesCount;
+            }
+        
+            //
+            // 未完待续...
+            //
+
+            vResult = TRUE;
+            break;
+        }
+
         break;
     }
 
