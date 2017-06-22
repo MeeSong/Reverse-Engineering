@@ -16,7 +16,7 @@
 //////////////////////////////////////////////////////////////////////////
 ptrdiff_t BaseStaticServerData{ 0 };
 
-fun$BaseFormatObjectAttributes      BaseFormatObjectAttributes{ nullptr }; 
+fun$BaseFormatObjectAttributes      BaseFormatObjectAttributes{ nullptr };
 fun$BaseIsDosApplication            BaseIsDosApplication{ nullptr };
 fun$BaseGetNamedObjectDirectory     BaseGetNamedObjectDirectory{ nullptr };
 
@@ -88,7 +88,7 @@ DOSERROR InitializeDependentFunction()
         {
             break;
         }
-        
+
         BaseGetNamedObjectDirectory = (fun$BaseGetNamedObjectDirectory)GetProcAddress(
             GetModuleHandleW(L"Kernel32.dll"), "BaseGetNamedObjectDirectory");
         if (nullptr == BaseGetNamedObjectDirectory)
@@ -123,7 +123,7 @@ DOSERROR InitializeDependentFunction()
         {
             break;
         }
-        
+
         RaiseInvalid16BitExeError = (fun$RaiseInvalid16BitExeError)GetProcAddress(
             GetModuleHandleW(L"Kernel32.dll"), "RaiseInvalid16BitExeError");
         if (nullptr == RaiseInvalid16BitExeError)
@@ -175,7 +175,7 @@ void* BasepIsRealtimeAllowed(BOOLEAN aKeep, BOOLEAN aImpersonate)
 }
 
 NTSTATUS BasepConvertMitigationPolicyFlags(
-    PROC_THREAD_ATTRIBUTE* aAttribute, 
+    PROC_THREAD_ATTRIBUTE* aAttribute,
     UINT64* aMitigationPolicyFlags)
 {
     UINT64 vPolicy{ 0 };
@@ -262,7 +262,7 @@ NTSTATUS BasepConvertMitigationPolicyFlags(
         {
             *aMitigationPolicyFlags |= 0x0000000000000200;
         }
-        else if (vForceRelocateImagesPolicy == 
+        else if (vForceRelocateImagesPolicy ==
             (PROCESS_CREATION_MITIGATION_POLICY_FORCE_RELOCATE_IMAGES_ALWAYS_ON
                 | PROCESS_CREATION_MITIGATION_POLICY_FORCE_RELOCATE_IMAGES_ALWAYS_OFF))
         {
@@ -285,7 +285,7 @@ NTSTATUS BasepConvertMitigationPolicyFlags(
         {
             *aMitigationPolicyFlags |= 0x0000000000002000;
         }
-        else if (vHeapTerminatePolicy == 
+        else if (vHeapTerminatePolicy ==
             (PROCESS_CREATION_MITIGATION_POLICY_HEAP_TERMINATE_ALWAYS_ON
                 | PROCESS_CREATION_MITIGATION_POLICY_HEAP_TERMINATE_ALWAYS_OFF))
         {
@@ -308,7 +308,7 @@ NTSTATUS BasepConvertMitigationPolicyFlags(
         {
             *aMitigationPolicyFlags |= 0x0000000000020000;
         }
-        else if (vBottomUpASLRPolicy == 
+        else if (vBottomUpASLRPolicy ==
             (PROCESS_CREATION_MITIGATION_POLICY_BOTTOM_UP_ASLR_ALWAYS_ON
                 | PROCESS_CREATION_MITIGATION_POLICY_BOTTOM_UP_ASLR_ALWAYS_OFF))
         {
@@ -331,7 +331,7 @@ NTSTATUS BasepConvertMitigationPolicyFlags(
         {
             *aMitigationPolicyFlags |= 0x0000000000200000;
         }
-        else if (vHighEntropyASLRPolicy == 
+        else if (vHighEntropyASLRPolicy ==
             (PROCESS_CREATION_MITIGATION_POLICY_HIGH_ENTROPY_ASLR_ALWAYS_ON
                 | PROCESS_CREATION_MITIGATION_POLICY_HIGH_ENTROPY_ASLR_ALWAYS_OFF))
         {
@@ -354,7 +354,7 @@ NTSTATUS BasepConvertMitigationPolicyFlags(
         {
             *aMitigationPolicyFlags |= 0x0000000002000000;
         }
-        else if (vStrictHandleChecksPolicy == 
+        else if (vStrictHandleChecksPolicy ==
             (PROCESS_CREATION_MITIGATION_POLICY_STRICT_HANDLE_CHECKS_ALWAYS_ON
                 | PROCESS_CREATION_MITIGATION_POLICY_STRICT_HANDLE_CHECKS_ALWAYS_OFF))
         {
@@ -377,7 +377,7 @@ NTSTATUS BasepConvertMitigationPolicyFlags(
         {
             *aMitigationPolicyFlags |= 0x0000000020000000;
         }
-        else if (vWin32kSystemCallDisablePolicy == 
+        else if (vWin32kSystemCallDisablePolicy ==
             (PROCESS_CREATION_MITIGATION_POLICY_WIN32K_SYSTEM_CALL_DISABLE_ALWAYS_ON
                 | PROCESS_CREATION_MITIGATION_POLICY_WIN32K_SYSTEM_CALL_DISABLE_ALWAYS_OFF))
         {
@@ -400,7 +400,7 @@ NTSTATUS BasepConvertMitigationPolicyFlags(
         {
             *aMitigationPolicyFlags |= 0x0000000200000000;
         }
-        else if (vExtensionPointDisablePolicy == 
+        else if (vExtensionPointDisablePolicy ==
             (PROCESS_CREATION_MITIGATION_POLICY_EXTENSION_POINT_DISABLE_ALWAYS_ON
                 | PROCESS_CREATION_MITIGATION_POLICY_EXTENSION_POINT_DISABLE_ALWAYS_OFF))
         {
@@ -423,7 +423,7 @@ NTSTATUS BasepConvertMitigationPolicyFlags(
         {
             *aMitigationPolicyFlags |= 0x0000002000000000;
         }
-        else if (vProhibitDynamicCodePolicy == 
+        else if (vProhibitDynamicCodePolicy ==
             (PROCESS_CREATION_MITIGATION_POLICY_PROHIBIT_DYNAMIC_CODE_ALWAYS_ON
                 | PROCESS_CREATION_MITIGATION_POLICY_PROHIBIT_DYNAMIC_CODE_ALWAYS_OFF))
         {
@@ -446,8 +446,8 @@ NTSTATUS BasepConvertMitigationPolicyFlags(
         {
             *aMitigationPolicyFlags |= 0x0000020000000000;
         }
-        else if (vControlFlowGuardPolicy == 
-            (PROCESS_CREATION_MITIGATION_POLICY_CONTROL_FLOW_GUARD_ALWAYS_ON 
+        else if (vControlFlowGuardPolicy ==
+            (PROCESS_CREATION_MITIGATION_POLICY_CONTROL_FLOW_GUARD_ALWAYS_ON
                 | PROCESS_CREATION_MITIGATION_POLICY_CONTROL_FLOW_GUARD_ALWAYS_OFF))
         {
             return STATUS_INVALID_PARAMETER;
@@ -469,7 +469,7 @@ NTSTATUS BasepConvertMitigationPolicyFlags(
         {
             *aMitigationPolicyFlags |= 0x0000200000000000;
         }
-        else if (vBlockNonMicrosoftBinariesPolicy == 
+        else if (vBlockNonMicrosoftBinariesPolicy ==
             (PROCESS_CREATION_MITIGATION_POLICY_BLOCK_NON_MICROSOFT_BINARIES_ALWAYS_ON
                 | PROCESS_CREATION_MITIGATION_POLICY_BLOCK_NON_MICROSOFT_BINARIES_ALWAYS_OFF))
         {
@@ -708,7 +708,7 @@ NTSTATUS BasepConvertWin32AttributeList(
                 vIsNormalAttribute = false;
                 break;
             }
-            
+
             case PROC_THREAD_ATTRIBUTE_SECURITY_CAPABILITIES:
             {
                 if (vAttribute->Size != sizeof(SECURITY_CAPABILITIES)
@@ -749,7 +749,7 @@ NTSTATUS BasepConvertWin32AttributeList(
                 }
 
                 PS_PROTECTION vProtectionLevel{};
-                
+
                 switch (*(UINT32*)(vAttribute->Value))
                 {
                 default:
@@ -763,10 +763,10 @@ NTSTATUS BasepConvertWin32AttributeList(
                         FALSE,
                         PsProtectedTypeProtectedLight);
                     break;
-                
+
                 case 1:
                     InitializePsProtection(
-                        &vProtectionLevel, 
+                        &vProtectionLevel,
                         PsProtectedSignerWindows,
                         FALSE,
                         PsProtectedTypeProtected);
@@ -907,12 +907,1293 @@ NTSTATUS BasepConvertWin32AttributeList(
     return vStatus;
 }
 
+// Duplicate LowboxToken
+NTSTATUS BasepCreateTokenFromLowboxToken(
+    HANDLE aToken,
+    SECURITY_CAPABILITIES* aSecurityCapabilities,
+    HANDLE* aLowBoxToken)
+{
+    NTSTATUS vStatus{ STATUS_SUCCESS };
+
+    TOKEN_APPCONTAINER_INFORMATION *vAppContainer{ nullptr };
+    TOKEN_GROUPS *vTokenGroups{ nullptr };
+
+    for (;;)
+    {
+        UINT32 vQuerySize{};
+
+        vStatus = NtQueryInformationToken(aToken, TokenAppContainerSid, 0, 0, &vQuerySize);
+        if (vStatus != STATUS_BUFFER_TOO_SMALL)
+        {
+            break;
+        }
+
+        vAppContainer = (TOKEN_APPCONTAINER_INFORMATION*)RtlAllocateHeap(RtlProcessHeap(), 0, vQuerySize);
+        if (nullptr == vAppContainer)
+        {
+            vStatus = STATUS_NO_MEMORY;
+            break;
+        }
+
+        vStatus = NtQueryInformationToken(aToken, TokenAppContainerSid, vAppContainer, vQuerySize, &vQuerySize);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        if (!RtlEqualSid(vAppContainer->TokenAppContainer, aSecurityCapabilities->AppContainerSid))
+        {
+            vStatus = STATUS_INVALID_PARAMETER;
+            break;
+        }
+
+        UINT32 vSidType{ 0 };
+
+        vStatus = RtlGetAppContainerSidType(aSecurityCapabilities->AppContainerSid, &vSidType);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        if (vSidType != 1)
+        {
+            vStatus = NtQueryInformationToken(aToken, TokenCapabilities, 0, 0, &vQuerySize);
+            if (vStatus != STATUS_BUFFER_TOO_SMALL)
+            {
+                break;
+            }
+
+            vTokenGroups = (TOKEN_GROUPS*)RtlAllocateHeap(RtlProcessHeap(), 0, vQuerySize);
+            if (nullptr == vTokenGroups)
+            {
+                vStatus = STATUS_NO_MEMORY;
+                break;
+            }
+
+            vStatus = NtQueryInformationToken(aToken, TokenCapabilities, vTokenGroups, vQuerySize, &vQuerySize);
+            if (!NT_SUCCESS(vStatus))
+            {
+                break;
+            }
+
+            if (aSecurityCapabilities->CapabilityCount != vTokenGroups->GroupCount)
+            {
+                vStatus = STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            bool vIsMatch{ vTokenGroups->GroupCount ? true : false };
+
+            for (UINT32 i = 0; i < vTokenGroups->GroupCount; ++i)
+            {
+                if ((RtlEqualSid(vTokenGroups->Groups[i].Sid, aSecurityCapabilities->Capabilities[i].Sid))
+                    && (vTokenGroups->Groups[i].Attributes == aSecurityCapabilities->Capabilities[i].Attributes))
+                {
+                    vIsMatch = true;
+                    break;
+                }
+            }
+
+            if (!vIsMatch)
+            {
+                vStatus = STATUS_INVALID_PARAMETER;
+                break;
+            }
+        }
+
+        vStatus = NtDuplicateToken(aToken, TOKEN_ALL_ACCESS, nullptr, FALSE, TokenPrimary, aLowBoxToken);
+        break;
+    }
+
+    if (vTokenGroups)
+    {
+        RtlFreeHeap(RtlProcessHeap(), 0, vTokenGroups);
+    }
+
+    if (vAppContainer)
+    {
+        RtlFreeHeap(RtlProcessHeap(), 0, vAppContainer);
+    }
+
+    return vStatus;
+}
+
+NTSTATUS BasepOpenBaseObjectDirectory(
+    UINT32 aAppContainerSidType,
+    UINT32 aSessionId,
+    UNICODE_STRING* aParentSidString,
+    HANDLE* aDirectoryHandle)
+{
+    NTSTATUS vStatus{ STATUS_SUCCESS };
+
+    wchar_t vDirectoryPathBuffer[MAXIMUM_FILENAME_LENGTH] {};
+    UNICODE_STRING vDirectoryPath{};
+
+    if ((aAppContainerSidType != 2)
+        && (aAppContainerSidType != 1 || !aParentSidString || !aParentSidString->Buffer))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    for (;;)
+    {
+        *aDirectoryHandle = nullptr;
+
+        if (aSessionId)
+        {
+            wchar_t *vSessionsPart = L"\\Sessions";
+
+            if (aAppContainerSidType == 2)
+            {
+                swprintf_s(vDirectoryPathBuffer, ARRAYSIZE(vDirectoryPathBuffer), L"%ws\\%ld\\BaseNamedObjects", vSessionsPart, aSessionId);
+            }
+            else
+            {
+                swprintf_s(vDirectoryPathBuffer, ARRAYSIZE(vDirectoryPathBuffer), L"%ws\\%ld\\AppContainerNamedObjects\\%ws",
+                    vSessionsPart, aSessionId, aParentSidString->Buffer);
+            }
+        }
+        else
+        {
+            swprintf_s(vDirectoryPathBuffer, ARRAYSIZE(vDirectoryPathBuffer), L"\\BaseNamedObjects");
+        }
+
+        RtlInitUnicodeString(&vDirectoryPath, vDirectoryPathBuffer);
+
+        OBJECT_ATTRIBUTES vObjectAttributes{};
+        InitializeObjectAttributes(&vObjectAttributes, &vDirectoryPath, 0, nullptr, nullptr);
+
+        vStatus = NtOpenDirectoryObject(
+            aDirectoryHandle, 
+            STANDARD_RIGHTS_READ | DIRECTORY_QUERY | DIRECTORY_TRAVERSE, 
+            &vObjectAttributes);
+        break;
+    }
+
+    return vStatus;
+}
+
+BOOLEAN IsLogonSid(PSID aSid)
+{
+    static SID_IDENTIFIER_AUTHORITY vSIDAuthNT = SECURITY_NT_AUTHORITY;
+
+    PSID_IDENTIFIER_AUTHORITY vSidIdentifier{ nullptr };
+    vSidIdentifier = RtlIdentifierAuthoritySid(aSid);
+
+    // 如果不符合 SECURITY_NT_AUTHORITY 则返回 false
+    if (memcmp(vSidIdentifier, &vSIDAuthNT, SID_IDENTIFIER_AUTHORITY_LENGTH))
+    {
+        return FALSE;
+    }
+
+    if (SECURITY_LOGON_IDS_RID_COUNT == *RtlSubAuthorityCountSid(aSid)
+        && SECURITY_LOGON_IDS_RID == *RtlSubAuthoritySid(aSid, 0))
+    {
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+enum BUILD_SECURITY_DESCRIPTOR_SID_FLAGS: UINT32
+{
+    BUILD_SID_NULL          = 0x0,
+    BUILD_SID_ADMINS        = 0x1,
+    BUILD_SID_RESTRICTED    = 0x2,
+    BUILD_SID_EVERYONE      = 0x4,
+};
+
+NTSTATUS BasepBuildPackageSecurityDescriptor(
+    SECURITY_DESCRIPTOR* aSecurityDescriptor,
+    PSID aAppContainerSid,
+    PSID aTokenSid,
+    UINT32 aFlags,
+    SECURITY_DESCRIPTOR* aNewSecurityDescriptor)
+{
+    NTSTATUS vStatus{ STATUS_SUCCESS };
+
+    PACL vDAcl{ nullptr };
+    PACL vNewAcl{ nullptr };
+
+    PSID vAdminSid{ nullptr };
+    PSID vEveryoneSid{ nullptr };
+    PSID vRestrictedSid{ nullptr };
+
+    for (;;)
+    {
+        vStatus = RtlCreateSecurityDescriptor(aNewSecurityDescriptor, SECURITY_DESCRIPTOR_REVISION);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        BOOLEAN vDaclParent{};
+        BOOLEAN vDaclDefaulted{};
+
+        vStatus = RtlGetDaclSecurityDescriptor(aSecurityDescriptor, &vDaclParent, &vDAcl, &vDaclDefaulted);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        ACL_SIZE_INFORMATION vDaclSizeInfo{};
+        vStatus = RtlQueryInformationAcl(vDAcl, &vDaclSizeInfo, sizeof(vDaclSizeInfo), AclSizeInformation);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        ACL_REVISION_INFORMATION vDaclRevisionInfo{};
+        vStatus = RtlQueryInformationAcl(vDAcl, &vDaclRevisionInfo, sizeof(vDaclRevisionInfo), AclRevisionInformation);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        static SID_IDENTIFIER_AUTHORITY vSIAAuthWorld = SECURITY_WORLD_SID_AUTHORITY;
+        static SID_IDENTIFIER_AUTHORITY vSIAAuthNT    = SECURITY_NT_AUTHORITY;
+
+        UINT32 vSidCount{ 0 };
+        UINT32 vSidTotalSize{ 0 };
+
+        if (aFlags & BUILD_SID_ADMINS)
+        {
+            // 管理员组 SID
+            vStatus = RtlAllocateAndInitializeSid(&vSIAAuthNT, 2, SECURITY_BUILTIN_DOMAIN_RID,
+                DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &vAdminSid);
+            if (!NT_SUCCESS(vStatus))
+            {
+                break;
+            }
+
+            ++vSidCount;
+            vSidTotalSize += RtlLengthSid(vAdminSid);
+        }
+        
+        if (aFlags & BUILD_SID_RESTRICTED)
+        {
+            // 受限组 SID
+            vStatus = RtlAllocateAndInitializeSid(&vSIAAuthNT, 1, SECURITY_RESTRICTED_CODE_RID,
+                0, 0, 0, 0, 0, 0, 0, &vRestrictedSid);
+            if (!NT_SUCCESS(vStatus))
+            {
+                break;
+            }
+
+            ++vSidCount;
+            vSidTotalSize += RtlLengthSid(vRestrictedSid);
+        }
+
+        if (aFlags & BUILD_SID_EVERYONE)
+        {
+            // Everyone 组 SID
+            vStatus = RtlAllocateAndInitializeSid(&vSIAAuthWorld, 1, SECURITY_WORLD_RID,
+                0, 0, 0, 0, 0, 0, 0, &vEveryoneSid);
+            if (!NT_SUCCESS(vStatus))
+            {
+                break;
+            }
+
+            ++vSidCount;
+            vSidTotalSize += RtlLengthSid(vEveryoneSid);
+        }
+
+        vSidCount += 2;
+        vSidTotalSize += 2 * RtlLengthSid(aTokenSid);
+
+        vSidCount += 2;
+        vSidTotalSize += 2 * RtlLengthSid(aAppContainerSid);
+
+        UINT32 vNewAclSize = 0xFFFFFFFC & 
+            (vSidTotalSize
+            + (sizeof(PSID) * vSidCount)
+            + vDaclSizeInfo.AclBytesInUse
+            + (sizeof(ACL) * 2)
+            + 3);
+        
+        vNewAcl = (PACL)RtlAllocateHeap(RtlProcessHeap(), 0, vNewAclSize);
+        if (nullptr == vNewAcl)
+        {
+            vStatus = STATUS_NO_MEMORY;
+            break;
+        }
+        RtlSecureZeroMemory(vNewAcl, vNewAclSize);
+
+        vStatus = RtlCreateAcl(vNewAcl, vNewAclSize, vDaclRevisionInfo.AclRevision);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        //
+        // Copy old ace
+        //
+
+        ACCESS_ALLOWED_ACE *vOldAce{ nullptr };
+        vStatus = RtlGetAce(vDAcl, 0, (void**)&vOldAce);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        vStatus = RtlAddAce(vNewAcl, vDaclRevisionInfo.AclRevision, 0, vOldAce, vDaclSizeInfo.AclBytesInUse - sizeof(ACL));
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        bool vIsExistUserSid{ false };
+
+        if (vDaclSizeInfo.AceCount)
+        {
+            ACCESS_ALLOWED_ACE *vAce{ nullptr };
+
+            for (UINT32 i = 0; i < vDaclSizeInfo.AceCount; ++i)
+            {
+                if (!NT_SUCCESS(RtlGetAce(vNewAcl, i, (void**)&vAce)))
+                {
+                    break;
+                }
+
+                if (IsLogonSid(PSID(&vAce->SidStart)))
+                {
+                    vAce->Mask = DIRECTORY_ALL_ACCESS;
+                }
+
+                if (RtlEqualSid(aTokenSid, PSID(&vAce->SidStart)))
+                {
+                    vIsExistUserSid = true;
+                    break;
+                }
+            }
+        }
+
+        if (!vIsExistUserSid)
+        {
+            // 添加 ACE (特殊) - 用户SID
+            vStatus = RtlAddAccessAllowedAce(
+                vNewAcl,
+                vDaclRevisionInfo.AclRevision,
+                DIRECTORY_ALL_ACCESS,
+                aTokenSid);
+            if (!NT_SUCCESS(vStatus))
+            {
+                break;
+            }
+
+            //添加 ACE (InheritNone) - 用户SID
+            vStatus = RtlAddAccessAllowedAceEx(
+                vNewAcl,
+                vDaclRevisionInfo.AclRevision,
+                OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE | INHERIT_ONLY_ACE,
+                GENERIC_ALL,
+                aTokenSid);
+            if (!NT_SUCCESS(vStatus))
+            {
+                break;
+            }
+        }
+
+        // 添加ACE (特殊) - 沙盒SID
+        vStatus = RtlAddAccessAllowedAce(
+            vNewAcl,
+            vDaclRevisionInfo.AclRevision,
+            DIRECTORY_ALL_ACCESS,
+            aAppContainerSid);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        // 添加 ACE (InheritNone) - 沙盒SID
+        vStatus = RtlAddAccessAllowedAceEx(
+            vNewAcl,
+            vDaclRevisionInfo.AclRevision,
+            OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE | INHERIT_ONLY_ACE,
+            GENERIC_ALL,
+            aAppContainerSid);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        if (aFlags & BUILD_SID_ADMINS)
+        {
+            // 添加ACE (InheritNone) - 管理员SID
+            vStatus = RtlAddAccessAllowedAceEx(
+                vNewAcl,
+                vDaclRevisionInfo.AclRevision,
+                OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE | INHERIT_ONLY_ACE,
+                GENERIC_ALL,
+                vAdminSid);
+            if (!NT_SUCCESS(vStatus))
+            {
+                break;
+            }
+        }
+
+        if (aFlags & BUILD_SID_RESTRICTED)
+        {
+            // 添加ACE (InheritNone) - 受限SID
+            vStatus = RtlAddAccessAllowedAceEx(
+                vNewAcl,
+                vDaclRevisionInfo.AclRevision,
+                OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE | INHERIT_ONLY_ACE,
+                GENERIC_READ | GENERIC_EXECUTE,
+                vRestrictedSid);
+            if (!NT_SUCCESS(vStatus))
+            {
+                break;
+            }
+        }
+
+        if (aFlags & BUILD_SID_EVERYONE)
+        {
+            // 添加ACE (InheritNone) - Everyone SID
+            vStatus = RtlAddAccessAllowedAceEx(
+                vNewAcl,
+                vDaclRevisionInfo.AclRevision,
+                OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE | INHERIT_ONLY_ACE,
+                GENERIC_READ | GENERIC_EXECUTE,
+                vEveryoneSid);
+            if (!NT_SUCCESS(vStatus))
+            {
+                break;
+            }
+        }
+
+        vStatus = RtlSetDaclSecurityDescriptor(aNewSecurityDescriptor, TRUE, vNewAcl, FALSE);
+
+        break;
+    }
+
+    if (!NT_SUCCESS(vStatus) && vNewAcl)
+    {
+        RtlFreeHeap(RtlProcessHeap(), 0, vNewAcl);
+    }
+
+    if (vAdminSid)
+    {
+        RtlFreeHeap(RtlProcessHeap(), 0, vAdminSid);
+    }
+
+    if (vRestrictedSid)
+    {
+        RtlFreeHeap(RtlProcessHeap(), 0, vRestrictedSid);
+    }
+
+    if (vEveryoneSid)
+    {
+        RtlFreeHeap(RtlProcessHeap(), 0, vEveryoneSid);
+    }
+
+    return vStatus;
+}
+
+void BasepReleasePackageSecurityDescriptor(
+    SECURITY_DESCRIPTOR* aSecurityDescriptor)
+{
+    if (aSecurityDescriptor->Dacl)
+    {
+        RtlFreeHeap(RtlProcessHeap(), 0, aSecurityDescriptor->Dacl);
+        aSecurityDescriptor->Dacl = nullptr;
+    }
+}
+
+NTSTATUS BasepOpenLowBoxRootDirectory(
+    UINT32 aAppContainerSidType,
+    UINT32 aSessionId,
+    UNICODE_STRING* aParentSidString,
+    PWSTR aLowBoxRootDirectory,
+    UINT32 aLowBoxRootDirectorySize,
+    HANDLE* aLowBoxRootDirectoryHandle)
+{
+    NTSTATUS vStatus{ STATUS_SUCCESS };
+
+    for (;;)
+    {
+        if (aAppContainerSidType == 1)
+        {
+            if (!aParentSidString || !aParentSidString->Buffer)
+            {
+                vStatus = STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            vStatus = RtlStringCchPrintfW(
+                aLowBoxRootDirectory, aLowBoxRootDirectorySize,
+                L"%ws\\%ld\\AppContainerNamedObjects\\%ws", 
+                L"\\Sessions", aSessionId, aParentSidString->Buffer);
+        }
+        else if (aAppContainerSidType == 2)
+        {
+            vStatus = RtlStringCchPrintfW(
+                aLowBoxRootDirectory, aLowBoxRootDirectorySize,
+                L"%ws\\%ld\\AppContainerNamedObjects",
+                L"\\Sessions", aSessionId);
+        }
+        else
+        {
+            vStatus = STATUS_INVALID_PARAMETER;
+            break;
+        }
+
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        UNICODE_STRING vLowBoxRootDirectory{};
+        RtlInitUnicodeString(&vLowBoxRootDirectory, aLowBoxRootDirectory);
+
+        OBJECT_ATTRIBUTES vObjectAttributes{};
+        InitializeObjectAttributes(&vObjectAttributes, &vLowBoxRootDirectory, 0, nullptr, nullptr);
+
+        vStatus = NtOpenDirectoryObject(
+            aLowBoxRootDirectoryHandle,
+            DIRECTORY_QUERY | DIRECTORY_TRAVERSE | DIRECTORY_CREATE_OBJECT | DIRECTORY_CREATE_SUBDIRECTORY,
+            &vObjectAttributes);
+
+        break;
+    }
+
+    return vStatus;
+}
+
+NTSTATUS BasepSetKernelIntegrityLabel(
+    HANDLE aDirectoryObject)
+{
+    NTSTATUS vStatus{ STATUS_SUCCESS };
+
+    HANDLE vNewObject{ nullptr };
+    PSID vMandatorySid{ nullptr };
+
+    for (;;)
+    {
+        vStatus = NtDuplicateObject(
+            GetCurrentProcess(), 
+            aDirectoryObject,
+            GetCurrentProcess(), 
+            &vNewObject,
+            DIRECTORY_ALL_ACCESS,
+            0, 
+            0);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        static SID_IDENTIFIER_AUTHORITY vSIAAuthLabel = SECURITY_MANDATORY_LABEL_AUTHORITY;
+
+        vStatus = RtlAllocateAndInitializeSid(
+            &vSIAAuthLabel,
+            1,
+            SECURITY_MANDATORY_LOW_RID,
+            0, 0, 0, 0, 0, 0, 0,
+            &vMandatorySid);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        SECURITY_DESCRIPTOR vSecurityDescriptor{};
+        vStatus = RtlCreateSecurityDescriptor(&vSecurityDescriptor, SECURITY_DESCRIPTOR_REVISION);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        UINT8 vAclBuffer[sizeof(ACL) + 80]{};
+        PACL vAcl = (PACL)vAclBuffer;
+
+        vStatus = RtlCreateAcl(vAcl, sizeof(vAclBuffer), ACL_REVISION);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        vStatus = RtlAddMandatoryAce(
+            vAcl, 
+            ACL_REVISION, 
+            0, 
+            vMandatorySid,
+            SYSTEM_MANDATORY_LABEL_ACE_TYPE,
+            OBJECT_TYPE_CREATE);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        vStatus = RtlSetSaclSecurityDescriptor(&vSecurityDescriptor, TRUE, vAcl, FALSE);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        vStatus = NtSetSecurityObject(
+            vNewObject, 
+            LABEL_SECURITY_INFORMATION, 
+            &vSecurityDescriptor);
+
+        break;
+    }
+
+    if (vNewObject)
+    {
+        NtClose(vNewObject);
+    }
+    if (vMandatorySid)
+    {
+        RtlFreeHeap(RtlProcessHeap(), 0, vMandatorySid);
+    }
+
+    return vStatus;
+}
+
+NTSTATUS BasepOpenShadowRpcControlDirectory(
+    UINT32 aAppContainersSidType,
+    HANDLE aLowBoxRootDirectoryHandle,
+    HANDLE* aShadowRpcDirectoryHandle)
+{
+    NTSTATUS vStatus{ STATUS_SUCCESS };
+
+    for (;;)
+    {
+        if (INT32(aAppContainersSidType) -1 > 1)
+        {
+            vStatus = STATUS_INVALID_PARAMETER;
+            break;
+        }
+
+        wchar_t vRpcDirectoryBuffer[MAXIMUM_FILENAME_LENGTH]{};
+        UNICODE_STRING vRpcDirectory{};
+
+        OBJECT_ATTRIBUTES vObjectAttributes{};
+
+        if (aAppContainersSidType == 1)
+        {
+            swprintf_s(vRpcDirectoryBuffer, ARRAYSIZE(vRpcDirectoryBuffer), L"RPC Control");
+            RtlInitUnicodeString(&vRpcDirectory, vRpcDirectoryBuffer);
+
+            InitializeObjectAttributes(&vObjectAttributes, &vRpcDirectory, 0, nullptr, nullptr);
+        }
+        else if (aAppContainersSidType == 2)
+        {
+            swprintf_s(vRpcDirectoryBuffer, ARRAYSIZE(vRpcDirectoryBuffer), L"\\RPC Control");
+            RtlInitUnicodeString(&vRpcDirectory, vRpcDirectoryBuffer);
+
+            InitializeObjectAttributes(&vObjectAttributes, &vRpcDirectory, 0, aLowBoxRootDirectoryHandle, nullptr);
+        }
+
+        vStatus = NtOpenDirectoryObject(
+            aShadowRpcDirectoryHandle,
+            DIRECTORY_QUERY | DIRECTORY_TRAVERSE,
+            &vObjectAttributes);
+
+        break;
+    }
+
+    return vStatus;
+}
+
+NTSTATUS BasepCreateLowBoxSymbolicLinks(
+    HANDLE aRootDirectoryHandle, 
+    UNICODE_STRING* aLowBoxSymbolicString,
+    SECURITY_DESCRIPTOR* aSecurityDescriptor,
+    HANDLE* aLocalSymbolic,
+    HANDLE* aGlobalSymbolic,
+    HANDLE* aSessionSymbolic)
+{
+    NTSTATUS vStatus{ STATUS_SUCCESS };
+
+    static UNICODE_STRING sGlobalName  = RTL_CONSTANT_STRING(L"Global");
+    static UNICODE_STRING sLocalName   = RTL_CONSTANT_STRING(L"Local");
+    static UNICODE_STRING sSessionName = RTL_CONSTANT_STRING(L"Session");
+
+    HANDLE vGlobalSymbolic{ nullptr };
+    HANDLE vLocalSymbolic{ nullptr };
+    HANDLE vSessionSymbolic{ nullptr };
+
+    *aLocalSymbolic = nullptr;
+    *aGlobalSymbolic = nullptr;
+    *aSessionSymbolic = nullptr;
+
+    for (;;)
+    {
+        UNICODE_STRING vBaseNamedNamespace = RTL_CONSTANT_STRING(L"\\BaseNamedObjects");
+        OBJECT_ATTRIBUTES vObjectAttributes{};
+
+        InitializeObjectAttributes(
+            &vObjectAttributes,
+            &sGlobalName,
+            OBJ_INHERIT | OBJ_OPENIF,
+            aRootDirectoryHandle,
+            aSecurityDescriptor);
+
+        vStatus = NtCreateSymbolicLinkObject(
+            &vGlobalSymbolic,
+            SYMBOLIC_LINK_ALL_ACCESS,
+            &vObjectAttributes,
+            &vBaseNamedNamespace);
+
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        InitializeObjectAttributes(
+            &vObjectAttributes,
+            &sLocalName,
+            OBJ_INHERIT | OBJ_OPENIF,
+            aRootDirectoryHandle,
+            aSecurityDescriptor);
+
+        vStatus = NtCreateSymbolicLinkObject(
+            &vLocalSymbolic,
+            SYMBOLIC_LINK_ALL_ACCESS,
+            &vObjectAttributes,
+            aLowBoxSymbolicString);
+        
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        InitializeObjectAttributes(
+            &vObjectAttributes,
+            &sSessionName,
+            OBJ_INHERIT | OBJ_OPENIF,
+            aRootDirectoryHandle,
+            aSecurityDescriptor);
+
+        vStatus = NtCreateSymbolicLinkObject(
+            &vSessionSymbolic,
+            SYMBOLIC_LINK_ALL_ACCESS,
+            &vObjectAttributes,
+            aLowBoxSymbolicString);
+
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        *aGlobalSymbolic    = vGlobalSymbolic;
+        *aLocalSymbolic     = vLocalSymbolic;
+        *aSessionSymbolic   = vSessionSymbolic;
+
+        break;
+    }
+
+    if (!NT_SUCCESS(vStatus))
+    {
+        if (vGlobalSymbolic)
+        {
+            NtClose(vGlobalSymbolic);
+        }
+
+        if (vLocalSymbolic)
+        {
+            NtClose(vLocalSymbolic);
+        }
+
+        if (vSessionSymbolic)
+        {
+            NtClose(vSessionSymbolic);
+        }
+    }
+
+    return vStatus;
+}
+
+NTSTATUS BasepCreateLowBoxObjectDirectories(
+    PSID aAppContainerSid,
+    HANDLE aToken,
+    LOWBOX_DATA* aLowBoxData)
+{
+    NTSTATUS vStatus{ STATUS_SUCCESS };
+
+    wchar_t vSidStr[MAXIMUM_FILENAME_LENGTH]{};
+    UNICODE_STRING vSidString{};
+    UNICODE_STRING vParentSidString{};
+
+    HANDLE vBaseDirectoryHandle{ nullptr };
+    HANDLE vLowBoxRootDirectoryHandle{ nullptr };
+    HANDLE vRootDirectoryHandle{ nullptr };
+
+    HANDLE vShadowRpcDirectoryHandle{ nullptr };
+    HANDLE vRpcDirectoryHandle{ nullptr };
+
+    HANDLE vNamedPipeHandle{ nullptr };
+
+    HANDLE vLocalSymbolic{ nullptr };
+    HANDLE vGlobalSymbolic{ nullptr };
+    HANDLE vSessionSymbolic{ nullptr };
+
+    SECURITY_DESCRIPTOR* vSecurityDescriptor{ nullptr };
+    TOKEN_USER* vTokenUser{ nullptr };
+
+    SECURITY_DESCRIPTOR vRootDirectorySD{};
+    SECURITY_DESCRIPTOR vRpcControlSD{};
+
+    for (;;)
+    {
+        UINT32 vQuerySize{ 0 };
+
+        UINT32 vSessionId{ 0 };
+        vStatus = NtQueryInformationToken(aToken, TokenSessionId, &vSessionId, sizeof(vSessionId), &vQuerySize);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        UINT32 vAppContainerSidType{ 0 };
+        vStatus = RtlGetAppContainerSidType(aAppContainerSid, &vAppContainerSidType);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        if (vAppContainerSidType == 2)
+        {
+            vStatus = RtlConvertSidToUnicodeString(&vSidString, aAppContainerSid, TRUE);
+            if (!NT_SUCCESS(vStatus))
+            {
+                break;
+            }
+        }
+        else
+        {
+            assert(vAppContainerSidType == 1);
+
+            PSID vParentSid{ nullptr };
+            vStatus = RtlGetAppContainerParent(aAppContainerSid, &vParentSid);
+            if (!NT_SUCCESS(vStatus))
+            {
+                break;
+            }
+
+            vStatus = RtlConvertSidToUnicodeString(&vParentSidString, vParentSid, TRUE);
+            RtlFreeHeap(RtlProcessHeap(), 0, vParentSid);
+
+            if (!NT_SUCCESS(vStatus))
+            {
+                break;
+            }
+
+            vStatus = RtlStringCchPrintfW(vSidStr, ARRAYSIZE(vSidStr), L"%u-%u-%u-%u",
+                RtlSubAuthoritySid(aAppContainerSid, 8),
+                RtlSubAuthoritySid(aAppContainerSid, 9),
+                RtlSubAuthoritySid(aAppContainerSid, 10),
+                RtlSubAuthoritySid(aAppContainerSid, 11));
+            if (!NT_SUCCESS(vStatus))
+            {
+                break;
+            }
+
+            RtlInitUnicodeString(&vSidString, vSidStr);
+        }
+
+        vStatus = BasepOpenBaseObjectDirectory(vAppContainerSidType, vSessionId, 
+            &vParentSidString, &vBaseDirectoryHandle);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        vStatus = NtQuerySecurityObject(vBaseDirectoryHandle,
+            DACL_SECURITY_INFORMATION, nullptr, 0, &vQuerySize);
+        if ( NT_WARNING(vStatus) && vStatus != STATUS_BUFFER_TOO_SMALL)
+        {
+            break;
+        }
+
+        vSecurityDescriptor = (SECURITY_DESCRIPTOR*)RtlAllocateHeap(RtlProcessHeap(), 0, vQuerySize);
+        if (nullptr == vSecurityDescriptor)
+        {
+            vStatus = STATUS_NO_MEMORY;
+            break;
+        }
+
+        vStatus = NtQuerySecurityObject(vBaseDirectoryHandle,
+            DACL_SECURITY_INFORMATION, vSecurityDescriptor, vQuerySize, &vQuerySize);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        vStatus = NtQueryInformationToken(aToken, TokenUser, nullptr, 0, &vQuerySize);
+        if (vStatus != STATUS_BUFFER_TOO_SMALL)
+        {
+            break;
+        }
+
+        vTokenUser = (TOKEN_USER*)RtlAllocateHeap(RtlProcessHeap(), 0, vQuerySize);
+        if (nullptr == vTokenUser)
+        {
+            vStatus = STATUS_NO_MEMORY;
+            break;
+        }
+
+        vStatus = NtQueryInformationToken(aToken, TokenUser, vTokenUser, vQuerySize, &vQuerySize);
+        if (!NT_WARNING(vStatus))
+        {
+            break;
+        }
+
+        vStatus = BasepBuildPackageSecurityDescriptor(
+            vSecurityDescriptor, 
+            aAppContainerSid,
+            vTokenUser->User.Sid,
+            0,
+            &vRootDirectorySD);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        wchar_t vLowBoxRootDirectory[MAXIMUM_FILENAME_LENGTH]{};
+        vStatus = BasepOpenLowBoxRootDirectory(
+            vAppContainerSidType, 
+            vSessionId, 
+            &vParentSidString,
+            vLowBoxRootDirectory, 
+            ARRAYSIZE(vLowBoxRootDirectory), 
+            &vLowBoxRootDirectoryHandle);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        OBJECT_ATTRIBUTES vObjectAttributes{};
+        InitializeObjectAttributes(
+            &vObjectAttributes, 
+            &vSidString, 
+            OBJ_INHERIT | OBJ_OPENIF,
+            vLowBoxRootDirectoryHandle,
+            &vRootDirectorySD);
+
+        vStatus = NtCreateDirectoryObjectEx(
+            &vRootDirectoryHandle,
+            DIRECTORY_QUERY | DIRECTORY_TRAVERSE | DIRECTORY_CREATE_OBJECT | DIRECTORY_CREATE_SUBDIRECTORY,
+            &vObjectAttributes,
+            vBaseDirectoryHandle,
+            1);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        vStatus = BasepSetKernelIntegrityLabel(vRootDirectoryHandle);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        vStatus = BasepOpenShadowRpcControlDirectory(
+            vAppContainerSidType, 
+            vLowBoxRootDirectoryHandle, 
+            &vShadowRpcDirectoryHandle);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        vStatus = BasepBuildPackageSecurityDescriptor(
+            vSecurityDescriptor,
+            aAppContainerSid,
+            vTokenUser->User.Sid,
+            BUILD_SID_ADMINS | BUILD_SID_RESTRICTED | BUILD_SID_EVERYONE,
+            &vRpcControlSD);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        UNICODE_STRING vRpcString{};
+        RtlInitUnicodeString(&vRpcString, L"RPC Control");
+
+        InitializeObjectAttributes(
+            &vObjectAttributes, 
+            &vRpcString,
+            OBJ_INHERIT | OBJ_OPENIF,
+            vRootDirectoryHandle,
+            &vRpcControlSD);
+
+        vStatus = NtCreateDirectoryObjectEx(
+            &vRpcDirectoryHandle,
+            DIRECTORY_QUERY | DIRECTORY_TRAVERSE | DIRECTORY_CREATE_OBJECT | DIRECTORY_CREATE_SUBDIRECTORY, 
+            &vObjectAttributes,
+            vShadowRpcDirectoryHandle,
+            1);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        vStatus = BasepSetKernelIntegrityLabel(vRpcDirectoryHandle);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        wchar_t vLowBoxSymbolicLinksStrBuffer[MAXIMUM_FILENAME_LENGTH]{};
+        swprintf_s(vLowBoxSymbolicLinksStrBuffer, ARRAYSIZE(vLowBoxSymbolicLinksStrBuffer),
+            L"%ws\\%ws", vLowBoxRootDirectory, vSidString.Buffer);
+
+        UNICODE_STRING vLowBoxSymbolicStr{};
+        RtlInitUnicodeString(&vLowBoxSymbolicStr, vLowBoxSymbolicLinksStrBuffer);
+
+        vStatus = BasepCreateLowBoxSymbolicLinks(
+            vRootDirectoryHandle, 
+            &vLowBoxSymbolicStr,
+            &vRootDirectorySD,
+            &vLocalSymbolic,
+            &vGlobalSymbolic,
+            &vSessionSymbolic);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        wchar_t vNamedPipeStrBuffer[MAXIMUM_FILENAME_LENGTH]{};
+        swprintf_s(vNamedPipeStrBuffer, ARRAYSIZE(vNamedPipeStrBuffer),
+            L"\\Device\\NamedPipe%ws", vLowBoxSymbolicLinksStrBuffer);
+
+        UNICODE_STRING vNamedPipeStr{};
+        RtlInitUnicodeString(&vNamedPipeStr, vNamedPipeStrBuffer);
+
+        InitializeObjectAttributes(
+            &vObjectAttributes,
+            &vNamedPipeStr,
+            OBJ_INHERIT | OBJ_CASE_INSENSITIVE,
+            nullptr,
+            &vRootDirectorySD);
+
+        assert(!(vRootDirectorySD.Control & SE_SELF_RELATIVE));
+        assert(vRootDirectorySD.Dacl);
+
+        PACL vRootDirectoryDacl = vRootDirectorySD.Dacl;
+        ACCESS_ALLOWED_ACE* vAce{ nullptr };
+        for (UINT32 i = 0; NT_SUCCESS(RtlGetAce(vRootDirectoryDacl, i, (void**)&vAce)); ++i)
+        {
+            UINT16 vMask = UINT16(vAce->Mask);
+            vAce->Mask &= (~0xFFFF);
+
+            if (vMask & FILE_CREATE_PIPE_INSTANCE)
+            {
+                vAce->Mask |= SYNCHRONIZE | FILE_WRITE_DATA;
+            }
+
+            if (vMask & FILE_READ_EA)
+            {
+                vAce->Mask |= SYNCHRONIZE | FILE_CREATE_PIPE_INSTANCE;
+            }
+        }
+
+        IO_STATUS_BLOCK vIOStatusBlock{};
+        vStatus = NtCreateFile(
+            &vNamedPipeHandle,
+            PIPE_ALL_ACCESS,
+            &vObjectAttributes,
+            &vIOStatusBlock,
+            nullptr,
+            FILE_ATTRIBUTE_NORMAL,
+            FILE_SHARE_READ | FILE_SHARE_WRITE,
+            FILE_OPEN_IF,
+            FILE_DIRECTORY_FILE, 
+            nullptr,
+            0);
+
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        aLowBoxData->RootDirectory          = vRootDirectoryHandle;
+        aLowBoxData->RpcControlDirectory    = vRpcDirectoryHandle;
+        aLowBoxData->LocalSymbolicLink      = vLocalSymbolic;
+        aLowBoxData->GlobalSymbolicLink     = vGlobalSymbolic;
+        aLowBoxData->SessionSymbolicLink    = vSessionSymbolic;
+        aLowBoxData->NamedPipe              = vNamedPipeHandle;
+
+        vStatus = STATUS_SUCCESS;
+        break;
+    }
+
+    if (!NT_SUCCESS(vStatus))
+    {
+        if (vRootDirectoryHandle)
+        {
+            NtClose(vRootDirectoryHandle);
+        }
+        if (vRpcDirectoryHandle)
+        {
+            NtClose(vRpcDirectoryHandle);
+        }
+    }
+
+    BasepReleasePackageSecurityDescriptor(&vRootDirectorySD);
+    BasepReleasePackageSecurityDescriptor(&vRpcControlSD);
+
+    if (vSidString.Buffer != vSidStr)
+    {
+        RtlFreeUnicodeString(&vSidString);
+    }
+    RtlFreeUnicodeString(&vParentSidString);
+
+    if (vTokenUser)
+    {
+        RtlFreeHeap(RtlProcessHeap(), 0, vTokenUser);
+    }
+    if (vSecurityDescriptor)
+    {
+        RtlFreeHeap(RtlProcessHeap(), 0, vSecurityDescriptor);
+    }
+    if (vBaseDirectoryHandle)
+    {
+        NtClose(vBaseDirectoryHandle);
+    }
+    if (vLowBoxRootDirectoryHandle)
+    {
+        NtClose(vLowBoxRootDirectoryHandle);
+    }
+    if (vShadowRpcDirectoryHandle)
+    {
+        NtClose(vShadowRpcDirectoryHandle);
+    }
+
+    return vStatus;
+}
+
 NTSTATUS BasepCreateLowBox(
     HANDLE aToken,
     SECURITY_CAPABILITIES* aSecurityCapabilities,
     HANDLE* aLowBoxToken)
 {
-    return STATUS_UNSUCCESSFUL;
+    NTSTATUS vStatus{ STATUS_SUCCESS };
+
+    HANDLE vToken{ aToken };
+    LOWBOX_DATA vLowBoxData{};
+
+    for (;;)
+    {
+        if (!aSecurityCapabilities->AppContainerSid)
+        {
+            vStatus = STATUS_INVALID_PARAMETER;
+            break;
+        }
+
+        if (!vToken)
+        {
+            if (NtCurrentTeb()->IsImpersonating)
+            {
+                vStatus = NtOpenThreadToken(GetCurrentThread(), TOKEN_ALL_ACCESS, FALSE, &vToken);
+            }
+            else
+            {
+                vStatus = NtOpenProcessToken(GetCurrentProcess(), TOKEN_ALL_ACCESS, &vToken);
+            }
+
+            if (!NT_SUCCESS(vStatus))
+            {
+                break;
+            }
+        }
+
+        if (aSecurityCapabilities->CapabilityCount > 0
+            && !aSecurityCapabilities->Capabilities)
+        {
+            vStatus = STATUS_INVALID_PARAMETER;
+            break;
+        }
+
+        UINT32 vQuerySize{ 0 };
+
+        BOOL vIsAppContainer{ FALSE };
+        vStatus = NtQueryInformationToken(vToken, TokenIsAppContainer,
+            &vIsAppContainer, sizeof(vIsAppContainer), &vQuerySize);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        if (vIsAppContainer)
+        {
+            vQuerySize = TOKEN_APPCONTAINER_SID_MAX_SIZE;
+            UINT8 vAppContainerSidBuffer[TOKEN_APPCONTAINER_SID_MAX_SIZE]{};
+
+            vStatus = NtQueryInformationToken(vToken, TokenAppContainerSid, vAppContainerSidBuffer, vQuerySize, &vQuerySize);
+            if (!NT_SUCCESS(vStatus))
+            {
+                break;
+            }
+
+            bool vIsFamily{ false };
+
+            if (RtlIsParentOfChildAppContainer(
+                ((TOKEN_APPCONTAINER_INFORMATION*)(vAppContainerSidBuffer))->TokenAppContainer,
+                aSecurityCapabilities->AppContainerSid))
+            {
+                vIsFamily = true;
+            }
+            else
+            {
+                vStatus = BasepCreateTokenFromLowboxToken(vToken, aSecurityCapabilities, aLowBoxToken);
+                if (NT_WARNING(vStatus))
+                {
+                    break;
+                }
+
+                break; // return
+            }
+        }
+
+        vStatus = BasepCreateLowBoxObjectDirectories(
+            aSecurityCapabilities->AppContainerSid, 
+            vToken,
+            &vLowBoxData);
+        if (!NT_SUCCESS(vStatus))
+        {
+            break;
+        }
+
+        OBJECT_ATTRIBUTES vObjectAttributes{};
+        InitializeObjectAttributes(
+            &vObjectAttributes,
+            nullptr,
+            0, 
+            nullptr,
+            nullptr);
+
+        vStatus = NtCreateLowBoxToken(
+            aLowBoxToken,
+            vToken,
+            TOKEN_ALL_ACCESS,
+            &vObjectAttributes,
+            aSecurityCapabilities->AppContainerSid,
+            aSecurityCapabilities->CapabilityCount,
+            aSecurityCapabilities->Capabilities,
+            sizeof(LOWBOX_DATA) / sizeof(HANDLE),
+            &vLowBoxData);
+
+        break;
+    }
+
+    HANDLE* vHandles = (HANDLE*)&vLowBoxData;
+    for (UINT32 i = 0; i < (sizeof(LOWBOX_DATA) / sizeof(HANDLE)); ++i)
+    {
+        if (vHandles[i])
+        {
+            NtClose(vHandles[i]);
+        }
+    }
+
+    if (!aToken && vToken)
+    {
+        NtClose(vToken);
+    }
+
+    return vStatus;
 }
 
 BOOL CreateProcessInternal(
@@ -957,7 +2238,7 @@ BOOL CreateProcessInternal(
 
     BOOLEAN vTestedAppX{ false };
     void* vAppXEnvironment{ nullptr };
-    void* vAppXContext{ nullptr };
+    void* vAppXContext{ nullptr }; // TODO: 暂时未知结构
 
     HANDLE vDebugObject{ nullptr };
     BOOL vErrorMode{ TRUE };
@@ -970,7 +2251,7 @@ BOOL CreateProcessInternal(
     HANDLE vExeFileHandle{};
     HANDLE vExeSectionHandle{};
     HANDLE vLowBoxToken{};
-    
+
     CLIENT_ID vClientId{};
     SECTION_IMAGE_INFORMATION vImageInfo{};
 
@@ -1209,7 +2490,7 @@ BOOL CreateProcessInternal(
                     vDosError = RtlNtStatusToDosError(vStatus);
                     break;
                 }
-                
+
                 assert(vPsAttributesCount <= (ProcThreadAttributeMaxWin8 + 3));
 
                 if ((vStartupInfo.lpAttributeList->PresentFlags & (1 << ProcThreadAttributeConsoleReference))
@@ -1225,7 +2506,7 @@ BOOL CreateProcessInternal(
                 }
             }
         }
-        
+
         if (!(aCreationFlags & CREATE_SEPARATE_WOW_VDM))
         {
             BOOL vInJob{ FALSE };
@@ -1251,7 +2532,7 @@ BOOL CreateProcessInternal(
 
         if (aCurrentDirectory)
         {
-            vCurrentDirectory = (wchar_t*)RtlAllocateHeap(RtlProcessHeap(), 0, 
+            vCurrentDirectory = (wchar_t*)RtlAllocateHeap(RtlProcessHeap(), 0,
                 sizeof(wchar_t) * (MAX_PATH - 1));
             if (nullptr == vCurrentDirectory)
             {
@@ -1260,7 +2541,7 @@ BOOL CreateProcessInternal(
             }
 
             // lpFilePart 在逆向的代码中是有传参数, 但是没有用到, 所以我直接给了 nullptr
-            UINT32 vFullPathLength = GetFullPathNameW(aCurrentDirectory, 
+            UINT32 vFullPathLength = GetFullPathNameW(aCurrentDirectory,
                 MAX_PATH - 1, vCurrentDirectory, nullptr);
             if (!vFullPathLength)
             {
@@ -1278,7 +2559,7 @@ BOOL CreateProcessInternal(
         OBJECT_ATTRIBUTES vLocalThreadObjectAttribute{};
 
         vStatus = BaseFormatObjectAttributes(
-            &vLocalProcessObjectAttribute, aProcessAttributes, 
+            &vLocalProcessObjectAttribute, aProcessAttributes,
             nullptr, &vProcessObjectAttribute);
         if (!NT_SUCCESS(vStatus))
         {
@@ -1359,9 +2640,9 @@ BOOL CreateProcessInternal(
                 vTestedAppX = true;
 
                 vStatus = BasepAppXExtension(
-                    aToken, 
-                    &vPackageFullName, 
-                    vSecurityCapabilities, 
+                    aToken,
+                    &vPackageFullName,
+                    vSecurityCapabilities,
                     aEnvironment,
                     &vAppXContext,
                     &vAppXEnvironment);
@@ -1389,7 +2670,7 @@ BOOL CreateProcessInternal(
             }
 
             //
-            // AppContainer , IE 经常用..
+            // AppContainer , UWP 应用基本都在用的沙盒Token
             //
 
             if (vSecurityCapabilities)
@@ -1450,7 +2731,9 @@ BOOL CreateProcessInternal(
                 vPsAttributeList->Attributes[vPsAttributesCount].ValuePtr = aToken;
                 ++vPsAttributesCount;
             }
-        
+
+            PS_CREATE_INFO vCreateInfo{ sizeof(vCreateInfo) };
+
             //
             // 未完待续...
             //

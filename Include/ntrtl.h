@@ -1,6 +1,9 @@
 #pragma once
 #include "ntbase.h"
 
+#include <wchar.h>
+#include <stdarg.h>
+
 //////////////////////////////////////////////////////////////////////////
 
 typedef struct _CURDIR
@@ -112,6 +115,99 @@ __inline void* RtlSecureZeroMemory(void* aPtr, SIZE_T aCount)
     volatile char *vPtr = (volatile char *)aPtr;
     __stosb((BYTE*)((UINT64)vPtr), 0, aCount);
     return aPtr;
+}
+
+//
+// RtlStringXXXX
+//
+
+enum NTSTRSAFE_MAX : INT32
+{
+    NTSTRSAFE_MAX_CCH = MAX_INT32,
+};
+
+static __inline NTSTATUS __stdcall RtlStringVPrintfWorkerW(
+    PWSTR pszDest,
+    size_t cchDest,
+    size_t* pcchNewDestLength,
+    PCWSTR pszFormat,
+    va_list argList)
+{
+    NTSTATUS status = STATUS_SUCCESS;
+    int iRet = 0;
+    size_t cchMax = 0;
+    size_t cchNewDestLength = 0;
+
+    // leave the last space for the null terminator
+    cchMax = cchDest - 1;
+    iRet = _vsnwprintf_s(pszDest, cchDest, cchMax, pszFormat, argList);
+    // ASSERT((iRet < 0) || (((size_t)iRet) <= cchMax));
+
+    if ((iRet < 0) || (((size_t)iRet) > cchMax))
+    {
+        // need to null terminate the string
+        pszDest += cchMax;
+        *pszDest = L'\0';
+
+        cchNewDestLength = cchMax;
+
+        // we have truncated pszDest
+        status = STATUS_BUFFER_OVERFLOW;
+    }
+    else if (((size_t)iRet) == cchMax)
+    {
+        // need to null terminate the string
+        pszDest += cchMax;
+        *pszDest = L'\0';
+
+        cchNewDestLength = cchMax;
+    }
+    else
+    {
+        cchNewDestLength = (size_t)iRet;
+    }
+
+    if (pcchNewDestLength)
+    {
+        *pcchNewDestLength = cchNewDestLength;
+    }
+
+    return status;
+}
+
+__inline NTSTATUS __stdcall RtlStringCchPrintfW(
+    PWSTR pszDest,
+    size_t cchDest,
+    PCWSTR pszFormat,
+    ...)
+{
+    NTSTATUS status{ STATUS_SUCCESS };
+
+    if ((cchDest == 0) || (cchDest > NTSTRSAFE_MAX_CCH))
+    {
+        status = STATUS_INVALID_PARAMETER;
+    }
+
+    if (NT_SUCCESS(status))
+    {
+        va_list argList;
+
+        va_start(argList, pszFormat);
+
+        status = RtlStringVPrintfWorkerW(pszDest,
+            cchDest,
+            NULL,
+            pszFormat,
+            argList);
+
+        va_end(argList);
+    }
+    else if (cchDest > 0)
+    {
+        *pszDest = '\0';
+    }
+
+    return status;
 }
 
 //
@@ -245,4 +341,199 @@ extern"C" NTSTATUS RtlDestroyEnvironment(void* Environment);
 // RtlXXXXString
 //
 
+#define RTL_CONSTANT_STRING(s)  \
+{ \
+    sizeof(s) - sizeof((s)[0]), \
+    sizeof(s),                  \
+    s                           \
+}
+
+extern"C" void RtlInitUnicodeString(
+    PUNICODE_STRING DestinationString,
+    PCWSTR SourceString);
+
 extern"C" void RtlFreeUnicodeString(PUNICODE_STRING UnicodeString);
+
+//
+// RtlXXXXAppContainer
+//
+
+extern"C" BOOLEAN RtlIsParentOfChildAppContainer(PSID aParentSid, PSID aChildSid);
+
+extern"C" NTSTATUS RtlGetAppContainerSidType(PSID aSid, UINT32* aSidType);
+
+extern"C" NTSTATUS RtlGetAppContainerParent(PSID aAppContainerSid, PSID* aParentSid);
+
+extern"C" UINT32* RtlSubAuthoritySid(PSID Sid, UINT32 SubAuthority);
+
+//
+// RtlXXXSid/Luid/Guid
+//
+
+extern"C" UINT32 RtlLengthSid(PSID Sid);
+
+extern"C" BOOLEAN RtlEqualSid(PSID Sid1, PSID Sid2);
+
+extern"C" NTSTATUS RtlConvertSidToUnicodeString(
+    PUNICODE_STRING UnicodeString,
+    PSID Sid,
+    BOOLEAN AllocateDestinationString);
+
+extern"C" NTSTATUS RtlAllocateAndInitializeSid(
+    SID_IDENTIFIER_AUTHORITY* IdentifierAuthority,
+    UINT8 SubAuthorityCount,
+    UINT32 SubAuthority0,
+    UINT32 SubAuthority1,
+    UINT32 SubAuthority2,
+    UINT32 SubAuthority3,
+    UINT32 SubAuthority4,
+    UINT32 SubAuthority5,
+    UINT32 SubAuthority6,
+    UINT32 SubAuthority7,
+    PSID *Sid);
+
+extern"C" NTSTATUS RtlInitializeSid(
+    PSID Sid,
+    PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
+    UINT8 SubAuthorityCount);
+
+extern"C" NTSTATUS RtlInitializeSidEx(
+    PSID Sid,
+    PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
+    UINT8 SubAuthorityCount,
+    ...);
+
+extern"C" PSID_IDENTIFIER_AUTHORITY RtlIdentifierAuthoritySid(PSID Sid);
+
+extern"C" UINT32* RtlSubAuthoritySid(PSID Sid, UINT32 SubAuthority);
+
+extern"C" UINT8* RtlSubAuthorityCountSid(PSID Sid);
+
+extern"C" UINT32 RtlLengthSid(
+    PSID Sid);
+
+extern"C" NTSTATUS RtlCopySid(
+    UINT32 DestinationSidLength,
+    PSID DestinationSid,
+    PSID SourceSid);
+
+//
+// RtlXXXAce
+//
+
+extern"C" NTSTATUS RtlAddAce(
+    PACL Acl,
+    UINT32 AceRevision,
+    UINT32 StartingAceIndex,
+    void* AceList,
+    UINT32 AceListLength);
+
+extern"C" NTSTATUS RtlDeleteAce(
+    PACL Acl,
+    UINT32 AceIndex);
+
+extern"C" NTSTATUS RtlGetAce(
+    PACL Acl,
+    UINT32 AceIndex,
+    void** Ace);
+
+extern"C" BOOLEAN RtlFirstFreeAce(
+    PACL Acl,
+    void** FirstFree);
+
+extern"C" NTSTATUS RtlAddAccessAllowedAce(
+    PACL Acl, 
+    UINT32 AceRevision,
+    ACCESS_MASK AccessMask,
+    PSID Sid);
+
+extern"C" NTSTATUS RtlAddAccessAllowedAceEx(
+    PACL Acl,
+    UINT32 AceRevision,
+    UINT32 AceFlags,
+    ACCESS_MASK AccessMask, 
+    PSID Sid);
+
+extern"C" NTSTATUS RtlAddMandatoryAce(
+    PACL Acl,
+    UINT32 AceRevision,
+    UINT32 AceFlags,
+    PSID Sid,
+    UINT8 AceType,
+    ACCESS_MASK AccessMask);
+
+//
+// RtlXXXXAcl
+//
+
+//
+//  The following declarations are used for setting and querying information
+//  about and ACL.  First are the various information classes available to
+//  the user.
+//
+
+enum ACL_INFORMATION_CLASS : UINT32
+{
+    AclRevisionInformation = 1,
+    AclSizeInformation
+};
+
+//
+//  This record is returned/sent if the user is requesting/setting the
+//  AclRevisionInformation
+//
+
+typedef struct _ACL_REVISION_INFORMATION {
+    UINT32 AclRevision;
+} ACL_REVISION_INFORMATION, *PACL_REVISION_INFORMATION;
+
+//
+//  This record is returned if the user is requesting AclSizeInformation
+//
+
+typedef struct _ACL_SIZE_INFORMATION {
+    UINT32 AceCount;
+    UINT32 AclBytesInUse;
+    UINT32 AclBytesFree;
+} ACL_SIZE_INFORMATION, *PACL_SIZE_INFORMATION;
+
+extern"C" NTSTATUS RtlCreateAcl(PACL Acl, UINT32 AclLength, UINT32 AclRevision);
+
+extern"C" NTSTATUS RtlQueryInformationAcl(
+    ACL* Acl,
+    void* AclInformation,
+    UINT32 AclInformationLength,
+    ACL_INFORMATION_CLASS AclInformationClass);
+
+//
+// RtlXXXXSecurityDescriptor
+//
+
+extern"C" NTSTATUS RtlCreateSecurityDescriptor(
+    SECURITY_DESCRIPTOR* SecurityDescriptor,
+    UINT32 Revision);
+
+extern"C" NTSTATUS RtlGetDaclSecurityDescriptor(
+    SECURITY_DESCRIPTOR* SecurityDescriptor,
+    BOOLEAN*             DaclPresent,
+    ACL*                 *Dacl,
+    BOOLEAN*             DaclDefaulted);
+
+extern"C" NTSTATUS RtlSetDaclSecurityDescriptor(
+    PSECURITY_DESCRIPTOR SecurityDescriptor, 
+    BOOLEAN DaclPresent,
+    PACL Dacl, 
+    BOOLEAN DaclDefaulted);
+
+extern"C" NTSTATUS RtlSetSaclSecurityDescriptor(
+    PSECURITY_DESCRIPTOR SecurityDescriptor,
+    BOOLEAN SaclPresent,
+    PACL Sacl,
+    BOOLEAN SaclDefaulted);
+
+extern"C" NTSTATUS RtlGetSaclSecurityDescriptor(
+    PSECURITY_DESCRIPTOR SecurityDescriptor,
+    BOOLEAN* SaclPresent,
+    PACL *Sacl,
+    BOOLEAN* SaclDefaulted);
+

@@ -1,7 +1,6 @@
 #pragma once
 #include "ntbase.h"
 
-using ACCESS_MASK = unsigned long;
 //////////////////////////////////////////////////////////////////////////
 
 enum PROCESS_ACCESS_MASK : UINT32

@@ -38,6 +38,51 @@ using SIZE_T    = UINT32;
 
 #endif
 
+enum : UINT8
+{
+    MAX_UINT8 = UINT8(~((UINT8)0))
+};
+
+enum : INT8
+{
+    MAX_INT8 = (MAX_UINT8 >> 1),
+    MIN_INT8 = ~MAX_INT8,
+};
+
+enum : UINT16
+{
+    MAX_UINT16 = UINT16(~((UINT16)0))
+};
+
+enum : INT16
+{
+    MAX_INT16 = (MAX_UINT16 >> 1),
+    MIN_INT16 = ~MAX_INT16,
+};
+
+enum : UINT32
+{
+    MAX_UINT32 = UINT32(~((UINT32)0))
+};
+
+enum : INT32
+{
+    MAX_INT32 = (MAX_UINT32 >> 1),
+    MIN_INT32 = ~MAX_INT32,
+};
+
+enum : UINT64
+{
+    MAX_UINT64 = UINT64(~((UINT64)0))
+};
+
+enum : INT64
+{
+    MAX_INT64 = (MAX_UINT64 >> 1),
+    MIN_INT64 = ~MAX_INT64,
+};
+
+
 using PSTR      = char *;
 using PCSTR     = const char*;
 
@@ -49,6 +94,8 @@ enum : UINT32
     DOS_MAX_COMPONENT_LENGTH    = 255,
     DOS_MAX_PATH_LENGTH         = DOS_MAX_COMPONENT_LENGTH + 5,
     MAX_PATH                    = DOS_MAX_PATH_LENGTH,
+
+    MAXIMUM_FILENAME_LENGTH     = DOS_MAX_COMPONENT_LENGTH + 1,
 };
 
 using BYTE      = UINT8;
@@ -89,6 +136,14 @@ enum : BOOL
 #endif // DEBUG
 
 
+// templates cannot be declared to have 'C' linkage
+extern "C++" template <typename T, size_t N>
+char(*RtlpNumberOf(T(&)[N]))[N];
+
+#define RTL_NUMBER_OF_V2(A) (sizeof(*RtlpNumberOf(A)))
+#define ARRAYSIZE(A)        RTL_NUMBER_OF_V2(A)
+
+
 #define offsetof(s,m) ((size_t)&reinterpret_cast<char const volatile&>((((s*)0)->m)))
 
 #define ANYSIZE_ARRAY 1   
@@ -96,6 +151,8 @@ enum : BOOL
 #define INVALID_HANDLE_VALUE ((HANDLE)(UINT_PTR)-1)
 
 //////////////////////////////////////////////////////////////////////////
+
+using ACCESS_MASK = unsigned long;
 
 enum STANDARD_ACCESS_MASK : UINT32
 {
@@ -138,11 +195,6 @@ enum STANDARD_ACCESS_MASK : UINT32
 };
 
 using LCID = UINT32;
-
-typedef struct _LUID {
-    UINT32 LowPart;
-    INT32 HighPart;
-} LUID, *PLUID;
 
 typedef struct _GUID {
     unsigned long  Data1;
